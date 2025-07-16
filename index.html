@@ -32,6 +32,12 @@
         ::-webkit-scrollbar-thumb:hover { background: #0041A1; }
         .modal { transition: opacity 0.25s ease; z-index: 9999; }
         .spinner { border-top-color: var(--fb-yellow); }
+        .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+        .status-syncing { background-color: #f59e0b; animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .status-synced { background-color: #22c55e; }
+        .status-error { background-color: #ef4444; }
+        .status-idle { background-color: #6b7280; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
@@ -42,7 +48,7 @@
         <!-- Başlık -->
         <header class="bg-fb-blue text-white p-4 rounded-t-lg shadow-lg flex justify-between items-center">
             <h1 class="text-xl sm:text-2xl font-bold"><i class="fa-solid fa-map-location-dot mr-2"></i>Kadastro İş Yönetim Sistemi</h1>
-            <span class="text-xs font-mono">v1.4.0</span>
+            <span class="text-xs font-mono">v2.0.0</span>
         </header>
 
         <!-- GitHub Ayar Alanı -->
@@ -64,7 +70,7 @@
                  <div class="md:col-span-3">
                      <label for="githubToken" class="block text-sm font-medium text-gray-700">GitHub Token</label>
                      <input type="password" id="githubToken" placeholder="GitHub Personal Access Token'ınızı buraya girin" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm">
-                     <p class="text-xs text-gray-500 mt-1">Bu anahtar, değişiklikleri GitHub'a kaydetmek için gereklidir. Tarayıcıda saklanmaz.</p>
+                     <p class="text-xs text-gray-500 mt-1">Bu anahtar, GitHub'a otomatik kayıt için gereklidir ve tarayıcınızda güvenli bir şekilde saklanır.</p>
                  </div>
              </div>
         </div>
@@ -80,25 +86,30 @@
                     <div><label for="dosyaSayisi" class="block text-sm font-medium text-gray-700">Dosya Sayısı</label><input type="number" id="dosyaSayisi" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"></div>
                     <div><label for="parselSayisi" class="block text-sm font-medium text-gray-700">Parsel Sayısı</label><input type="number" id="parselSayisi" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"></div>
                     <div class="sm:col-span-2 md:col-span-1"><label for="isTuru" class="block text-sm font-medium text-gray-700">İş Türü</label><select id="isTuru" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"><option>Yükleniyor...</option></select></div>
-                    <div class="sm:col-span-2 md:col-span-3"><button id="isiAktarBtn" class="w-full btn-primary font-bold py-2 px-4 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"><i class="fa-solid fa-plus mr-2"></i>İşi Ekle</button></div>
+                    <div class="sm:col-span-2 md:col-span-3">
+                        <button id="isiAktarBtn" class="w-full btn-primary font-bold py-2 px-4 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center justify-center" disabled>
+                            <span id="addBtnText"><i class="fa-solid fa-plus mr-2"></i>İşi Ekle ve Kaydet</span>
+                            <span id="addSpinner" class="hidden"><svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Ekleniyor...</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="lg:col-span-1 bg-gray-50 p-4 rounded-lg border">
-                     <h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4">Personel Seçimi</h3>
+                    <h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4">Personel Seçimi</h3>
                     <div><label for="personelSec" class="block text-sm font-medium text-gray-700">Personel</label><select id="personelSec" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"><option>Yükleniyor...</option></select></div>
                     <div class="mt-2 flex gap-2"><button id="personelEkleBtn" class="flex-grow btn-secondary py-2 px-4 rounded-lg text-sm">Ekle <i class="fa-solid fa-arrow-down ml-1"></i></button></div>
                     <div class="mt-4"><label for="secilenPersoneller" class="block text-sm font-medium text-gray-700">Görevli Personeller</label><textarea id="secilenPersoneller" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm" readonly></textarea></div>
-                     <div class="mt-2 flex gap-2"><button id="personelTemizleBtn" class="flex-grow bg-red-600 text-white py-2 px-4 rounded-lg text-sm hover:bg-red-700">Temizle <i class="fa-solid fa-trash ml-1"></i></button></div>
+                    <div class="mt-2 flex gap-2"><button id="personelTemizleBtn" class="flex-grow bg-red-600 text-white py-2 px-4 rounded-lg text-sm hover:bg-red-700">Temizle <i class="fa-solid fa-trash ml-1"></i></button></div>
                 </div>
             </div>
 
-            <!-- Kayıt Listesi ve Kaydet Butonu -->
+            <!-- Kayıt Listesi -->
             <div>
                 <div class="flex justify-between items-center">
                     <h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4">İş Listesi</h3>
-                    <button id="saveToGithubBtn" class="btn-primary font-bold py-2 px-4 rounded-lg shadow-md hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center" disabled>
-                        <span id="saveBtnText"><i class="fa-solid fa-save mr-2"></i>Değişiklikleri Kaydet</span>
-                        <span id="saveSpinner" class="hidden"><svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Kaydediliyor...</span>
-                    </button>
+                    <div id="syncStatus" class="flex items-center text-sm text-gray-600">
+                        <span id="statusDot" class="status-dot status-idle"></span>
+                        <span id="statusText">Başlatılıyor...</span>
+                    </div>
                 </div>
                 <div class="overflow-x-auto bg-white rounded-lg shadow mt-4">
                     <table class="min-w-full divide-y divide-gray-200">
@@ -133,21 +144,27 @@
         const githubRepoInput = document.getElementById('githubRepo');
         const githubPathInput = document.getElementById('githubPath');
         const githubTokenInput = document.getElementById('githubToken');
-        const saveToGithubBtn = document.getElementById('saveToGithubBtn');
-        const saveBtnText = document.getElementById('saveBtnText');
-        const saveSpinner = document.getElementById('saveSpinner');
+        const isiAktarBtn = document.getElementById('isiAktarBtn');
+        const addBtnText = document.getElementById('addBtnText');
+        const addSpinner = document.getElementById('addSpinner');
         
         const personelSec = document.getElementById('personelSec');
         const isTuru = document.getElementById('isTuru');
         const birim = document.getElementById('birim');
         const kayitListesi = document.getElementById('kayitListesi');
         const secilenPersoneller = document.getElementById('secilenPersoneller');
+
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
         
+        const GITHUB_TOKEN_KEY = 'github_token_kadastro_app';
+
         let tumKayitlar = [];
         let personelListesi = [], isListesi = [], birimListesi = [];
-        let originalWorkbook = null; // Orijinal Excel dosyasını tutacak
-        let fileSHA = null; // GitHub'daki dosyanın SHA'sını tutacak
+        let originalWorkbook = null; 
+        let fileSHA = null; 
         let silinecekKayitIndex = null;
+        let isSyncing = false;
 
         // --- MODAL YÖNETİMİ ---
         const infoModal = document.getElementById('infoModal');
@@ -170,14 +187,34 @@
             confirmModal.classList.remove('opacity-0', 'pointer-events-none');
         };
         
-        // --- GITHUB API FONKSİYONLARI ---
+        // --- GITHUB API & ANA FONKSİYONLAR ---
         const getApiUrl = () => `https://api.github.com/repos/${githubOwnerInput.value}/${githubRepoInput.value}/contents/${githubPathInput.value}`;
 
+        const updateSyncStatus = (status, text) => {
+            statusDot.className = `status-dot ${status}`;
+            statusText.textContent = text;
+        };
+
+        const setAddButtonState = (loading) => {
+            if (loading) {
+                isiAktarBtn.disabled = true;
+                addBtnText.classList.add('hidden');
+                addSpinner.classList.remove('hidden');
+            } else {
+                isiAktarBtn.disabled = false;
+                addSpinner.classList.add('hidden');
+                addBtnText.classList.remove('hidden');
+            }
+        };
+
         const excelVerisiYukle = async () => {
+            updateSyncStatus('status-syncing', 'Veriler Yükleniyor...');
             kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">Veri yükleniyor...</td></tr>`;
             const GITHUB_TOKEN = githubTokenInput.value;
             if (!GITHUB_TOKEN) {
+                updateSyncStatus('status-idle', 'GitHub Token bekleniyor.');
                 kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-orange-500">Lütfen GitHub Token girerek verileri yükleyin.</td></tr>`;
+                isiAktarBtn.disabled = true;
                 return;
             }
 
@@ -187,7 +224,7 @@
                 });
                 if (!response.ok) throw new Error(`GitHub'dan dosya alınamadı: ${response.statusText}`);
                 const data = await response.json();
-                fileSHA = data.sha; // Dosya SHA'sını sakla
+                fileSHA = data.sha;
 
                 const binaryString = atob(data.content);
                 const bytes = new Uint8Array(binaryString.length);
@@ -215,39 +252,35 @@
                 const kayitlarSheet = originalWorkbook.Sheets['Kayitlar'];
                 tumKayitlar = kayitlarSheet ? XLSX.utils.sheet_to_json(kayitlarSheet) : [];
                 kayitListesiniGuncelle();
-                window.showInfoModal("Veriler GitHub'dan başarıyla yüklendi.");
+                updateSyncStatus('status-synced', `Güncel. Son Yükleme: ${new Date().toLocaleTimeString()}`);
+                isiAktarBtn.disabled = false;
 
             } catch (error) {
                 console.error('Excel dosyası okunurken hata:', error);
                 window.showInfoModal(`Excel dosyası okunurken bir hata oluştu: ${error.message}`, true);
-                kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-red-500">Veri yüklenemedi. Token'ı kontrol edin.</td></tr>`;
+                updateSyncStatus('status-error', 'Veri Yüklenemedi!');
+                kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-red-500">Veri yüklenemedi. Token'ı veya ayarları kontrol edin.</td></tr>`;
+                isiAktarBtn.disabled = true;
             }
         };
         
         const saveDataToGithub = async () => {
+            if (isSyncing) return;
+            isSyncing = true;
+            
             const GITHUB_TOKEN = githubTokenInput.value;
-            if (!GITHUB_TOKEN) {
-                window.showInfoModal("GitHub Token girilmedi. Değişiklikler kaydedilemez.", true);
-                return;
-            }
-            if (!fileSHA) {
-                window.showInfoModal("Dosya bilgisi (SHA) alınamadı. Lütfen sayfayı yenileyip tekrar deneyin.", true);
+            if (!GITHUB_TOKEN || !fileSHA) {
+                window.showInfoModal("GitHub Token veya dosya bilgisi (SHA) eksik. Değişiklikler kaydedilemez.", true);
+                isSyncing = false;
                 return;
             }
 
-            setSaveButtonState(true); // Butonu "Kaydediliyor..." yap
+            updateSyncStatus('status-syncing', 'Değişiklikler Kaydediliyor...');
 
             try {
-                // Yeni kayıtlar sayfasını oluştur
                 const newKayitlarSheet = XLSX.utils.json_to_sheet(tumKayitlar);
-                
-                // Orijinal workbook'taki 'Kayitlar' sayfasını güncelle
                 originalWorkbook.Sheets['Kayitlar'] = newKayitlarSheet;
-                
-                // Workbook'u binary formatına çevir
                 const newWorkbookBinary = XLSX.write(originalWorkbook, { bookType: 'xlsx', type: 'binary' });
-                
-                // Binary string'i Base64'e çevir
                 const newContentBase64 = btoa(newWorkbookBinary);
                 
                 const response = await fetch(getApiUrl(), {
@@ -271,36 +304,30 @@
                 const responseData = await response.json();
                 fileSHA = responseData.content.sha; // Yeni SHA'yı güncelle
                 
+                updateSyncStatus('status-synced', `Başarıyla Kaydedildi! (${new Date().toLocaleTimeString()})`);
                 window.showInfoModal("Değişiklikler başarıyla GitHub'a kaydedildi!");
-                setSaveButtonState(false, false); // Kaydetme butonunu pasif yap (değişiklik yok)
 
             } catch (error) {
                 console.error("GitHub'a kaydetme hatası:", error);
-                window.showInfoModal(`Hata: ${error.message}`, true);
-                setSaveButtonState(false, true); // Butonu tekrar aktif et (hata oldu)
+                window.showInfoModal(`Otomatik kaydetme sırasında hata oluştu: ${error.message}. Veriler eski haline getiriliyor.`, true);
+                updateSyncStatus('status-error', 'Kaydetme Başarısız!');
+                // Hata durumunda, tutarsızlığı önlemek için veriyi GitHub'dan yeniden yükle
+                await excelVerisiYukle();
+            } finally {
+                isSyncing = false;
             }
         };
         
         // --- UI YARDIMCI FONKSİYONLARI ---
-        const setSaveButtonState = (isLoading, hasChanges = true) => {
-            if (isLoading) {
-                saveToGithubBtn.disabled = true;
-                saveBtnText.classList.add('hidden');
-                saveSpinner.classList.remove('hidden');
-            } else {
-                saveSpinner.classList.add('hidden');
-                saveBtnText.classList.remove('hidden');
-                saveToGithubBtn.disabled = !hasChanges;
-            }
-        };
-
         const kayitListesiniGuncelle = () => {
             kayitListesi.innerHTML = '';
             if (tumKayitlar.length === 0) {
                 kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">Henüz kayıt eklenmemiş.</td></tr>`;
                 return;
             }
-            tumKayitlar.forEach((kayit, index) => {
+            // Kayıtları ters sırada göster (yeni eklenen en üstte)
+            [...tumKayitlar].forEach((kayit, index) => {
+                const originalIndex = tumKayitlar.length - 1 - index;
                 const row = `
                     <tr class="hover:bg-fb-yellow hover:bg-opacity-20">
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${kayit['Kayıt No'] || ''}</td>
@@ -311,33 +338,35 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit['Parsel Sayısı'] || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit.Tarih || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button class="text-red-600 hover:text-red-900" onclick="window.sil(${index})"><i class="fa-solid fa-trash-alt"></i> Sil</button>
+                            <button class="text-red-600 hover:text-red-900" onclick="window.sil(${originalIndex})"><i class="fa-solid fa-trash-alt"></i> Sil</button>
                         </td>
                     </tr>`;
-                kayitListesi.innerHTML += row;
+                kayitListesi.insertAdjacentHTML('afterbegin', row);
             });
         };
         
         window.sil = (index) => {
-            window.showConfirmModal(`'${tumKayitlar[index]['Kayıt No']}' numaralı kaydı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`, index);
+            const kayitNo = tumKayitlar[index]['Kayıt No'] || 'isimsiz';
+            window.showConfirmModal(`'${kayitNo}' numaralı kaydı silmek istediğinizden emin misiniz? Bu işlem otomatik olarak kaydedilecektir.`, index);
         };
 
         // --- EVENT LISTENERS ---
-        githubTokenInput.addEventListener('change', excelVerisiYukle);
-        saveToGithubBtn.addEventListener('click', saveDataToGithub);
+        githubTokenInput.addEventListener('change', () => {
+             localStorage.setItem(GITHUB_TOKEN_KEY, githubTokenInput.value);
+             excelVerisiYukle();
+        });
 
-        confirmOkBtn.addEventListener('click', () => {
+        confirmOkBtn.addEventListener('click', async () => {
             if (silinecekKayitIndex !== null) {
                 tumKayitlar.splice(silinecekKayitIndex, 1);
                 kayitListesiniGuncelle();
-                setSaveButtonState(false, true); // Değişiklik var, kaydet butonunu aktif et
-                window.showInfoModal("Kayıt yerel olarak silindi. Değişikliği kalıcı yapmak için kaydedin.");
+                closeConfirmModal();
+                await saveDataToGithub();
             }
-            closeConfirmModal();
         });
         confirmCancelBtn.addEventListener('click', closeConfirmModal);
 
-        document.getElementById('isiAktarBtn').addEventListener('click', () => {
+        isiAktarBtn.addEventListener('click', async () => {
             const yeniKayit = {
                 'Kayıt No': document.getElementById('kayitNo').value,
                 'Tarih': document.getElementById('tarih').value,
@@ -351,17 +380,23 @@
                 window.showInfoModal('Lütfen Kayıt No, Birim, İş Türü ve Personel alanlarını doldurun.', true);
                 return;
             }
+
+            setAddButtonState(true);
+            
             tumKayitlar.unshift(yeniKayit);
             kayitListesiniGuncelle();
-            setSaveButtonState(false, true); // Değişiklik var, kaydet butonunu aktif et
             
+            await saveDataToGithub();
+
+            // Formu temizle
             document.getElementById('kayitNo').value = '';
             document.getElementById('dosyaSayisi').value = '';
             document.getElementById('parselSayisi').value = '';
             document.getElementById('isTuru').selectedIndex = 0;
             document.getElementById('birim').selectedIndex = 0;
             secilenPersoneller.value = '';
-            window.showInfoModal('Yeni iş kaydı eklendi. Değişikliği kalıcı yapmak için kaydedin.');
+            
+            setAddButtonState(false);
         });
         
         document.getElementById('excelAktarBtn').addEventListener('click', () => {
@@ -376,10 +411,24 @@
             XLSX.writeFile(workbook, `Kadastro_Is_Listesi_${dateStr}.xlsx`);
         });
 
-        // Diğer butonlar ve başlangıç ayarları
         document.getElementById('personelEkleBtn').addEventListener('click', () => { const secilen = personelSec.value; if (secilen && !secilenPersoneller.value.includes(secilen)) { secilenPersoneller.value += (secilenPersoneller.value ? '\n' : '') + secilen; } });
         document.getElementById('personelTemizleBtn').addEventListener('click', () => { secilenPersoneller.value = ''; });
-        document.getElementById('tarih').valueAsDate = new Date();
+        
+        // --- BAŞLANGIÇ ---
+        const init = () => {
+            document.getElementById('tarih').valueAsDate = new Date();
+            const savedToken = localStorage.getItem(GITHUB_TOKEN_KEY);
+            if (savedToken) {
+                githubTokenInput.value = savedToken;
+                excelVerisiYukle();
+            } else {
+                updateSyncStatus('status-idle', 'GitHub Token bekleniyor.');
+                kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-orange-500">Başlamak için lütfen GitHub Token'ınızı girin.</td></tr>`;
+                isiAktarBtn.disabled = true;
+            }
+        };
+
+        init();
     });
     </script>
 </body>
