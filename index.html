@@ -15,6 +15,9 @@
             --fb-blue: #002D72;
             --fb-yellow: #FBB03B;
         }
+        body {
+            -webkit-text-size-adjust: 100%; /* iOS'ta yazı tipi boyutlandırmasını önler */
+        }
         .bg-fb-blue { background-color: var(--fb-blue); }
         .bg-fb-yellow { background-color: var(--fb-yellow); }
         .text-fb-blue { color: var(--fb-blue); }
@@ -26,7 +29,7 @@
         .btn-primary:disabled { background-color: #a0aec0; cursor: not-allowed; }
         .btn-secondary { background-color: var(--fb-yellow); color: var(--fb-blue); font-weight: bold; transition: background-color 0.3s; }
         .btn-secondary:hover { background-color: #FFC72C; }
-        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: var(--fb-blue); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #0041A1; }
@@ -41,7 +44,6 @@
         .fa-sync.fa-spin { display: none; }
         .refresh-active .fa-sync:not(.fa-spin) { display: none; }
         .refresh-active .fa-sync.fa-spin { display: inline-block; }
-        /* Açılır/Kapanır ayarlar için stil */
         #githubSettingsContent {
             max-height: 0;
             overflow: hidden;
@@ -52,12 +54,12 @@
 <body class="bg-gray-100 font-sans">
 
     <!-- Ana Konteyner -->
-    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+    <div class="container mx-auto p-2 sm:p-4 lg:p-8">
 
         <!-- Başlık -->
         <header class="bg-fb-blue text-white p-4 rounded-t-lg shadow-lg flex justify-between items-center">
-            <h1 class="text-xl sm:text-2xl font-bold"><i class="fa-solid fa-map-location-dot mr-2"></i>Kadastro İş Yönetim Sistemi</h1>
-            <span class="text-xs font-mono">v2.7.0</span>
+            <h1 class="text-lg sm:text-2xl font-bold"><i class="fa-solid fa-map-location-dot mr-2"></i>Kadastro İş Yönetim Sistemi</h1>
+            <span class="text-xs font-mono">v2.8.0</span>
         </header>
 
         <!-- GitHub Ayar Alanı (Açılır/Kapanır) -->
@@ -91,18 +93,18 @@
             </div>
         </div>
 
-        <main class="bg-white p-4 sm:p-6 lg:p-8 rounded-lg shadow-lg">
+        <main class="bg-white p-2 sm:p-6 lg:p-8 rounded-lg shadow-lg">
             <!-- Form Alanı -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    <div class="md:col-span-3"><h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4">Yeni İş Kaydı</h3></div>
-                    <div><label for="kayitNo" class="block text-sm font-medium text-gray-700">Kayıt No (MEGSİS)</label><input type="text" id="kayitNo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"></div>
+                <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="sm:col-span-2"><h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4">Yeni İş Kaydı</h3></div>
+                    <div class="sm:col-span-2"><label for="kayitNo" class="block text-sm font-medium text-gray-700">Kayıt No (MEGSİS)</label><input type="text" id="kayitNo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"></div>
                     <div><label for="tarih" class="block text-sm font-medium text-gray-700">Tarih</label><input type="date" id="tarih" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"></div>
                     <div><label for="birim" class="block text-sm font-medium text-gray-700">Birim</label><select id="birim" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"><option>Yükleniyor...</option></select></div>
                     <div><label for="dosyaSayisi" class="block text-sm font-medium text-gray-700">Dosya Sayısı</label><input type="number" id="dosyaSayisi" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"></div>
                     <div><label for="parselSayisi" class="block text-sm font-medium text-gray-700">Parsel Sayısı</label><input type="number" id="parselSayisi" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"></div>
-                    <div class="sm:col-span-2 md:col-span-1"><label for="isTuru" class="block text-sm font-medium text-gray-700">İş Türü</label><select id="isTuru" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"><option>Yükleniyor...</option></select></div>
-                    <div class="sm:col-span-2 md:col-span-3">
+                    <div class="sm:col-span-2"><label for="isTuru" class="block text-sm font-medium text-gray-700">İş Türü</label><select id="isTuru" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"><option>Yükleniyor...</option></select></div>
+                    <div class="sm:col-span-2">
                         <button id="isiAktarBtn" class="w-full btn-primary font-bold py-2 px-4 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center justify-center" disabled>
                             <span id="addBtnText"><i class="fa-solid fa-plus mr-2"></i>İşi Ekle ve Kaydet</span>
                             <span id="addSpinner" class="hidden"><svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Ekleniyor...</span>
@@ -120,7 +122,7 @@
 
             <!-- Kayıt Listesi -->
             <div>
-                <div class="flex justify-between items-center gap-4">
+                <div class="flex flex-wrap justify-between items-center gap-4">
                     <h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4 flex-grow">İş Listesi</h3>
                     <div id="syncStatus" class="flex items-center text-sm text-gray-600">
                         <span id="statusDot" class="status-dot status-idle"></span>
@@ -183,7 +185,6 @@
         const statusText = document.getElementById('statusText');
         const refreshBtn = document.getElementById('refreshBtn');
         const GITHUB_TOKEN_KEY = 'github_token_kadastro_app';
-        // Açılır/Kapanır ayarlar için
         const toggleGithubSettingsBtn = document.getElementById('toggleGithubSettings');
         const githubSettingsContent = document.getElementById('githubSettingsContent');
         const settingsChevron = document.getElementById('settingsChevron');
@@ -486,7 +487,6 @@
         document.getElementById('personelEkleBtn').addEventListener('click', () => { const secilen = personelSec.value; if (secilen && !secilenPersoneller.value.includes(secilen)) { secilenPersoneller.value += (secilenPersoneller.value ? '\n' : '') + secilen; } });
         document.getElementById('personelTemizleBtn').addEventListener('click', () => { secilenPersoneller.value = ''; });
         
-        // Açılır/Kapanır ayarlar için event listener
         toggleGithubSettingsBtn.addEventListener('click', () => {
             settingsChevron.classList.toggle('rotate-180');
             if (githubSettingsContent.style.maxHeight) {
@@ -507,7 +507,6 @@
                 updateSyncStatus('status-idle', 'GitHub Token bekleniyor.');
                 kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-orange-500">Başlamak için lütfen GitHub Token'ınızı girin.</td></tr>`;
                 isiAktarBtn.disabled = true;
-                // Token yoksa ayarlar bölümünü açık başlat
                 toggleGithubSettingsBtn.click();
             }
         };
