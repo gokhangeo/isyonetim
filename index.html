@@ -63,7 +63,7 @@
         <!-- Başlık -->
         <header class="bg-fb-blue text-white p-4 rounded-t-lg shadow-lg flex justify-between items-center">
             <h1 class="text-xl sm:text-2xl font-bold"><i class="fa-solid fa-map-location-dot mr-2"></i>Kadastro İş Yönetim Sistemi</h1>
-            <span class="text-xs font-mono">v1.5.0</span>
+            <span class="text-xs font-mono">v2.0.0</span>
         </header>
 
         <!-- GitHub Ayar Alanı -->
@@ -148,7 +148,7 @@
     <script>
     document.addEventListener('DOMContentLoaded', () => {
 
-        // --- GITHUB & DOM DEĞİŞKENLERİ ---
+        // --- DEĞİŞKENLER ---
         const githubOwnerInput = document.getElementById('githubOwner');
         const githubRepoInput = document.getElementById('githubRepo');
         const githubPathInput = document.getElementById('githubPath');
@@ -171,29 +171,21 @@
         let silinecekKayitIndex = null;
         let isDataLoaded = false;
 
-        // --- YÜKLEME GÖSTERGESİ ---
-        const showLoader = (text = "İşlem Yapılıyor...") => {
-            loaderText.textContent = text;
-            globalLoader.classList.remove('hidden');
-        };
-        const hideLoader = () => {
-            globalLoader.classList.add('hidden');
-        };
+        // --- YARDIMCI FONKSİYONLAR ---
+        const showLoader = (text = "İşlem Yapılıyor...") => { loaderText.textContent = text; globalLoader.classList.remove('hidden'); };
+        const hideLoader = () => { globalLoader.classList.add('hidden'); };
 
-        // --- MODAL YÖNETİMİ ---
         const infoModal = document.getElementById('infoModal');
         const infoModalText = document.getElementById('infoModalText');
-        const confirmModal = document.getElementById('confirmModal');
-        const confirmModalText = document.getElementById('confirmModalText');
-        const confirmOkBtn = document.getElementById('confirmOkBtn');
-        const confirmCancelBtn = document.getElementById('confirmCancelBtn');
-
         window.closeInfoModal = () => infoModal.classList.add('opacity-0', 'pointer-events-none');
         window.showInfoModal = (text, isError = false) => {
             infoModalText.textContent = text;
             infoModal.querySelector('p.text-2xl').className = isError ? "text-2xl font-bold text-red-600" : "text-2xl font-bold text-fb-blue";
             infoModal.classList.remove('opacity-0', 'pointer-events-none');
         };
+
+        const confirmModal = document.getElementById('confirmModal');
+        const confirmModalText = document.getElementById('confirmModalText');
         const closeConfirmModal = () => confirmModal.classList.add('opacity-0', 'pointer-events-none');
         window.showConfirmModal = (text, index) => {
             silinecekKayitIndex = index;
@@ -201,9 +193,9 @@
             confirmModal.classList.remove('opacity-0', 'pointer-events-none');
         };
         
-        // --- GITHUB API FONKSİYONLARI ---
         const getApiUrl = () => `https://api.github.com/repos/${githubOwnerInput.value}/${githubRepoInput.value}/contents/${githubPathInput.value}`;
 
+        // --- ANA FONKSİYONLAR ---
         const excelVerisiYukle = async () => {
             const GITHUB_TOKEN = githubTokenInput.value;
             if (!GITHUB_TOKEN) {
@@ -261,22 +253,30 @@
             }
         };
         
-        const saveDataToGithub = async (actionText) => {
+        const saveDataToGithub = async (dataToSave, actionText) => {
             if (!isDataLoaded) {
-                window.showInfoModal("Önce verileri yüklemeniz gerekiyor.", true);
-                return false;
+                window.showInfoModal("Önce verilerin yüklenmesi gerekiyor.", true);
+                return { success: false };
             }
             const GITHUB_TOKEN = githubTokenInput.value;
             if (!GITHUB_TOKEN || !fileSHA) {
-                window.showInfoModal("GitHub Token veya dosya bilgisi (SHA) eksik. Değişiklikler kaydedilemez.", true);
-                return false;
+                window.showInfoModal("GitHub Token veya dosya bilgisi (SHA) eksik.", true);
+                return { success: false };
             }
 
-            showLoader(`${actionText} GitHub'a kaydediliyor...`);
             try {
-                const newKayitlarSheet = XLSX.utils.json_to_sheet(tumKayitlar);
-                originalWorkbook.Sheets['Kayitlar'] = newKayitlarSheet;
-                const newWorkbookBinary = XLSX.write(originalWorkbook, { bookType: 'xlsx', type: 'binary' });
+                const workbookToSave = XLSX.utils.book_new();
+                
+                Object.keys(originalWorkbook.Sheets).forEach(sheetName => {
+                    if (sheetName !== 'Kayitlar') {
+                        XLSX.utils.book_append_sheet(workbookToSave, originalWorkbook.Sheets[sheetName], sheetName);
+                    }
+                });
+
+                const newKayitlarSheet = XLSX.utils.json_to_sheet(dataToSave);
+                XLSX.utils.book_append_sheet(workbookToSave, newKayitlarSheet, 'Kayitlar');
+
+                const newWorkbookBinary = XLSX.write(workbookToSave, { bookType: 'xlsx', type: 'binary' });
                 const newContentBase64 = btoa(newWorkbookBinary);
                 
                 const response = await fetch(getApiUrl(), {
@@ -295,22 +295,17 @@
                 }
                 
                 const responseData = await response.json();
-                fileSHA = responseData.content.sha;
+                const newSHA = responseData.content.sha;
                 
                 window.showInfoModal(`Başarılı: ${actionText} GitHub'a kaydedildi!`);
-                return true;
+                return { success: true, newSHA: newSHA, newWorkbook: workbookToSave };
             } catch (error) {
                 console.error("GitHub'a kaydetme hatası:", error);
-                window.showInfoModal(`Hata: ${error.message}`, true);
-                // Hata durumunda verileri yeniden yükleyerek tutarlılığı sağla
-                await excelVerisiYukle();
-                return false;
-            } finally {
-                hideLoader();
+                window.showInfoModal(`Hata: ${error.message}. Değişiklikleriniz kaydedilemedi.`, true);
+                return { success: false };
             }
         };
         
-        // --- UI YARDIMCI FONKSİYONLARI ---
         const kayitListesiniGuncelle = () => {
             kayitListesi.innerHTML = '';
             if (tumKayitlar.length === 0) {
@@ -342,15 +337,28 @@
         // --- EVENT LISTENERS ---
         loadDataBtn.addEventListener('click', excelVerisiYukle);
         
-        confirmOkBtn.addEventListener('click', async () => {
+        document.getElementById('confirmOkBtn').addEventListener('click', async () => {
             if (silinecekKayitIndex !== null) {
-                const silinenKayit = tumKayitlar.splice(silinecekKayitIndex, 1);
-                kayitListesiniGuncelle();
+                const indexToRemove = silinecekKayitIndex;
+                silinecekKayitIndex = null;
                 closeConfirmModal();
-                await saveDataToGithub(`Kayıt Silindi: ${silinenKayit[0]['Kayıt No']}`);
+
+                const kayitAdi = tumKayitlar[indexToRemove]['Kayıt No'];
+                const guncelListe = tumKayitlar.filter((_, index) => index !== indexToRemove);
+                
+                showLoader("Kayıt siliniyor ve kaydediliyor...");
+                const result = await saveDataToGithub(guncelListe, `Kayıt Silindi: ${kayitAdi}`);
+                hideLoader();
+                
+                if (result.success) {
+                    tumKayitlar = guncelListe;
+                    fileSHA = result.newSHA;
+                    originalWorkbook = result.newWorkbook;
+                    kayitListesiniGuncelle();
+                }
             }
         });
-        confirmCancelBtn.addEventListener('click', closeConfirmModal);
+        document.getElementById('confirmCancelBtn').addEventListener('click', closeConfirmModal);
 
         document.getElementById('isiAktarBtn').addEventListener('click', async () => {
             const yeniKayit = {
@@ -367,11 +375,18 @@
                 return;
             }
             
-            tumKayitlar.unshift(yeniKayit);
-            kayitListesiniGuncelle();
+            const guncelListe = [yeniKayit, ...tumKayitlar];
             
-            const isSuccess = await saveDataToGithub(`Yeni Kayıt Eklendi: ${yeniKayit['Kayıt No']}`);
-            if (isSuccess) {
+            showLoader("Yeni kayıt ekleniyor ve kaydediliyor...");
+            const result = await saveDataToGithub(guncelListe, `Yeni Kayıt Eklendi: ${yeniKayit['Kayıt No']}`);
+            hideLoader();
+
+            if (result.success) {
+                tumKayitlar = guncelListe;
+                fileSHA = result.newSHA;
+                originalWorkbook = result.newWorkbook;
+                kayitListesiniGuncelle();
+
                 document.getElementById('kayitNo').value = '';
                 document.getElementById('dosyaSayisi').value = '';
                 document.getElementById('parselSayisi').value = '';
@@ -393,20 +408,19 @@
             XLSX.writeFile(workbook, `Kadastro_Is_Listesi_${dateStr}.xlsx`);
         });
 
-        // Diğer butonlar ve başlangıç ayarları
         document.getElementById('personelEkleBtn').addEventListener('click', () => { const secilen = personelSec.value; if (secilen && !secilenPersoneller.value.includes(secilen)) { secilenPersoneller.value += (secilenPersoneller.value ? '\n' : '') + secilen; } });
         document.getElementById('personelTemizleBtn').addEventListener('click', () => { secilenPersoneller.value = ''; });
         document.getElementById('tarih').valueAsDate = new Date();
 
-        // Sayfa yüklendiğinde localStorage'dan token'ı al ve yükle
+        // Sayfa yüklendiğinde token'ı al ama veriyi otomatik yükleme
         const savedToken = localStorage.getItem('githubToken');
         if (savedToken) {
             githubTokenInput.value = savedToken;
             rememberTokenCheckbox.checked = true;
-            excelVerisiYukle();
-        } else {
-            kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-orange-500">Başlamak için lütfen GitHub Token'ınızı girin ve 'Verileri Yükle' butonuna basın.</td></tr>`;
         }
+        
+        kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-orange-500">Başlamak için lütfen GitHub Token'ınızı girin ve 'Verileri Yükle' butonuna basın.</td></tr>`;
+        
     });
     </script>
 </body>
