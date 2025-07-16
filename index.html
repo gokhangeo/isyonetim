@@ -11,7 +11,6 @@
     <!-- Font Awesome Ikonları için -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-        /* Fenerbahçe Teması için özel renkler */
         :root {
             --fb-blue: #002D72;
             --fb-yellow: #FBB03B;
@@ -22,42 +21,17 @@
         .text-fb-yellow { color: var(--fb-yellow); }
         .border-fb-blue { border-color: var(--fb-blue); }
         .border-fb-yellow { border-color: var(--fb-yellow); }
-        .btn-primary {
-            background-color: var(--fb-blue);
-            color: white;
-            transition: background-color 0.3s;
-        }
-        .btn-primary:hover {
-            background-color: #0041A1; /* Biraz daha açık mavi */
-        }
-        .btn-secondary {
-            background-color: var(--fb-yellow);
-            color: var(--fb-blue);
-            font-weight: bold;
-            transition: background-color 0.3s;
-        }
-        .btn-secondary:hover {
-            background-color: #FFC72C; /* Biraz daha açık sarı */
-        }
-        /* Kaydırma çubuğu stilleri */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--fb-blue);
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #0041A1;
-        }
-        /* Modal Stilleri */
-        .modal {
-            transition: opacity 0.25s ease;
-            z-index: 9999;
-        }
+        .btn-primary { background-color: var(--fb-blue); color: white; transition: background-color 0.3s; }
+        .btn-primary:hover { background-color: #0041A1; }
+        .btn-primary:disabled { background-color: #a0aec0; cursor: not-allowed; }
+        .btn-secondary { background-color: var(--fb-yellow); color: var(--fb-blue); font-weight: bold; transition: background-color 0.3s; }
+        .btn-secondary:hover { background-color: #FFC72C; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: var(--fb-blue); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #0041A1; }
+        .modal { transition: opacity 0.25s ease; z-index: 9999; }
+        .spinner { border-top-color: var(--fb-yellow); }
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
@@ -67,99 +41,74 @@
 
         <!-- Başlık -->
         <header class="bg-fb-blue text-white p-4 rounded-t-lg shadow-lg flex justify-between items-center">
-            <h1 class="text-xl sm:text-2xl font-bold">
-                <i class="fa-solid fa-map-location-dot mr-2"></i>Kadastro İş Yönetim Sistemi
-            </h1>
-            <span class="text-xs font-mono">v1.3.0</span>
+            <h1 class="text-xl sm:text-2xl font-bold"><i class="fa-solid fa-map-location-dot mr-2"></i>Kadastro İş Yönetim Sistemi</h1>
+            <span class="text-xs font-mono">v1.4.0</span>
         </header>
 
-        <main class="bg-white p-4 sm:p-6 lg:p-8 rounded-b-lg shadow-lg">
+        <!-- GitHub Ayar Alanı -->
+        <div class="bg-white p-4 my-4 rounded-lg shadow-lg border border-gray-200">
+             <h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4">GitHub Bağlantı Ayarları</h3>
+             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                 <div>
+                     <label for="githubOwner" class="block text-sm font-medium text-gray-700">Repo Sahibi</label>
+                     <input type="text" id="githubOwner" value="gokhangeo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm">
+                 </div>
+                 <div>
+                     <label for="githubRepo" class="block text-sm font-medium text-gray-700">Repo Adı</label>
+                     <input type="text" id="githubRepo" value="isyonetim" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm">
+                 </div>
+                 <div>
+                     <label for="githubPath" class="block text-sm font-medium text-gray-700">Dosya Yolu</label>
+                     <input type="text" id="githubPath" value="isyonetim.xlsx" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm">
+                 </div>
+                 <div class="md:col-span-3">
+                     <label for="githubToken" class="block text-sm font-medium text-gray-700">GitHub Token</label>
+                     <input type="password" id="githubToken" placeholder="GitHub Personal Access Token'ınızı buraya girin" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm">
+                     <p class="text-xs text-gray-500 mt-1">Bu anahtar, değişiklikleri GitHub'a kaydetmek için gereklidir. Tarayıcıda saklanmaz.</p>
+                 </div>
+             </div>
+        </div>
 
+        <main class="bg-white p-4 sm:p-6 lg:p-8 rounded-b-lg shadow-lg">
             <!-- Form Alanı -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                
-                <!-- Sol Sütun: İş Bilgileri -->
                 <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    <div class="md:col-span-3">
-                        <h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4">Yeni İş Kaydı</h3>
-                    </div>
-                    <div>
-                        <label for="kayitNo" class="block text-sm font-medium text-gray-700">Kayıt No (MEGSİS)</label>
-                        <input type="text" id="kayitNo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm">
-                    </div>
-                    <div>
-                        <label for="tarih" class="block text-sm font-medium text-gray-700">Tarih</label>
-                        <input type="date" id="tarih" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm">
-                    </div>
-                    <div>
-                        <label for="birim" class="block text-sm font-medium text-gray-700">Birim</label>
-                        <select id="birim" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm">
-                            <option>Yükleniyor...</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="dosyaSayisi" class="block text-sm font-medium text-gray-700">Dosya Sayısı</label>
-                        <input type="number" id="dosyaSayisi" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm">
-                    </div>
-                    <div>
-                        <label for="parselSayisi" class="block text-sm font-medium text-gray-700">Parsel Sayısı</label>
-                        <input type="number" id="parselSayisi" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm">
-                    </div>
-                    <div class="sm:col-span-2 md:col-span-1">
-                        <label for="isTuru" class="block text-sm font-medium text-gray-700">İş Türü</label>
-                        <select id="isTuru" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm">
-                            <option>Yükleniyor...</option>
-                        </select>
-                    </div>
-                    <div class="sm:col-span-2 md:col-span-3">
-                         <button id="isiAktarBtn" class="w-full btn-primary font-bold py-2 px-4 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            <i class="fa-solid fa-plus mr-2"></i>İşi Aktar
-                        </button>
-                    </div>
+                    <div class="md:col-span-3"><h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4">Yeni İş Kaydı</h3></div>
+                    <div><label for="kayitNo" class="block text-sm font-medium text-gray-700">Kayıt No (MEGSİS)</label><input type="text" id="kayitNo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"></div>
+                    <div><label for="tarih" class="block text-sm font-medium text-gray-700">Tarih</label><input type="date" id="tarih" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"></div>
+                    <div><label for="birim" class="block text-sm font-medium text-gray-700">Birim</label><select id="birim" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"><option>Yükleniyor...</option></select></div>
+                    <div><label for="dosyaSayisi" class="block text-sm font-medium text-gray-700">Dosya Sayısı</label><input type="number" id="dosyaSayisi" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"></div>
+                    <div><label for="parselSayisi" class="block text-sm font-medium text-gray-700">Parsel Sayısı</label><input type="number" id="parselSayisi" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"></div>
+                    <div class="sm:col-span-2 md:col-span-1"><label for="isTuru" class="block text-sm font-medium text-gray-700">İş Türü</label><select id="isTuru" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"><option>Yükleniyor...</option></select></div>
+                    <div class="sm:col-span-2 md:col-span-3"><button id="isiAktarBtn" class="w-full btn-primary font-bold py-2 px-4 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"><i class="fa-solid fa-plus mr-2"></i>İşi Ekle</button></div>
                 </div>
-
-                <!-- Sağ Sütun: Personel Seçimi -->
                 <div class="lg:col-span-1 bg-gray-50 p-4 rounded-lg border">
                      <h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4">Personel Seçimi</h3>
-                    <div>
-                        <label for="personelSec" class="block text-sm font-medium text-gray-700">Personel</label>
-                        <select id="personelSec" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm">
-                            <option>Yükleniyor...</option>
-                        </select>
-                    </div>
-                    <div class="mt-2 flex gap-2">
-                        <button id="personelEkleBtn" class="flex-grow btn-secondary py-2 px-4 rounded-lg text-sm">Ekle <i class="fa-solid fa-arrow-down ml-1"></i></button>
-                    </div>
-                    <div class="mt-4">
-                        <label for="secilenPersoneller" class="block text-sm font-medium text-gray-700">Görevli Personeller</label>
-                        <textarea id="secilenPersoneller" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm" readonly></textarea>
-                    </div>
-                     <div class="mt-2 flex gap-2">
-                        <button id="personelTemizleBtn" class="flex-grow bg-red-600 text-white py-2 px-4 rounded-lg text-sm hover:bg-red-700">Temizle <i class="fa-solid fa-trash ml-1"></i></button>
-                    </div>
+                    <div><label for="personelSec" class="block text-sm font-medium text-gray-700">Personel</label><select id="personelSec" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"><option>Yükleniyor...</option></select></div>
+                    <div class="mt-2 flex gap-2"><button id="personelEkleBtn" class="flex-grow btn-secondary py-2 px-4 rounded-lg text-sm">Ekle <i class="fa-solid fa-arrow-down ml-1"></i></button></div>
+                    <div class="mt-4"><label for="secilenPersoneller" class="block text-sm font-medium text-gray-700">Görevli Personeller</label><textarea id="secilenPersoneller" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm" readonly></textarea></div>
+                     <div class="mt-2 flex gap-2"><button id="personelTemizleBtn" class="flex-grow bg-red-600 text-white py-2 px-4 rounded-lg text-sm hover:bg-red-700">Temizle <i class="fa-solid fa-trash ml-1"></i></button></div>
                 </div>
             </div>
 
-            <!-- Kayıt Listesi -->
+            <!-- Kayıt Listesi ve Kaydet Butonu -->
             <div>
-                <h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4">İş Listesi</h3>
-                <div class="overflow-x-auto bg-white rounded-lg shadow">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4">İş Listesi</h3>
+                    <button id="saveToGithubBtn" class="btn-primary font-bold py-2 px-4 rounded-lg shadow-md hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center" disabled>
+                        <span id="saveBtnText"><i class="fa-solid fa-save mr-2"></i>Değişiklikleri Kaydet</span>
+                        <span id="saveSpinner" class="hidden"><svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Kaydediliyor...</span>
+                    </button>
+                </div>
+                <div class="overflow-x-auto bg-white rounded-lg shadow mt-4">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-fb-blue">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Kayıt No</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Personeller</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Birim</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">İş</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Dosya Sayısı</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Parsel Sayısı</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Tarih</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">İşlem</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Kayıt No</th><th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Personeller</th><th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Birim</th><th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">İş</th><th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Dosya Sayısı</th><th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Parsel Sayısı</th><th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Tarih</th><th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">İşlem</th>
                             </tr>
                         </thead>
                         <tbody id="kayitListesi" class="bg-white divide-y divide-gray-200">
-                            <!-- Kayıtlar buraya dinamik olarak eklenecek -->
-                            <tr><td colspan="8" class="p-4 text-center text-gray-500">Veri yükleniyor veya kayıt bulunamadı...</td></tr>
+                            <tr><td colspan="8" class="p-4 text-center text-gray-500">Veri yükleniyor...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -167,58 +116,27 @@
 
             <!-- Alt Butonlar -->
             <footer class="mt-8 pt-6 border-t-2 border-gray-200 flex flex-wrap gap-4 justify-center">
-                <button id="excelAktarBtn" class="btn-primary py-2 px-5 rounded-lg shadow-md hover:shadow-lg"><i class="fa-solid fa-file-excel mr-2"></i>Excel'e Aktar</button>
-                <button onclick="window.showInfoModal('Bu özellik yakında eklenecektir.')" class="bg-gray-500 text-white py-2 px-5 rounded-lg shadow-md hover:bg-gray-600"><i class="fa-solid fa-list-check mr-2"></i>Tüm İşlemleri Gör</button>
-                <button onclick="window.showInfoModal('Bu özellik yakında eklenecektir.')" class="bg-gray-500 text-white py-2 px-5 rounded-lg shadow-md hover:bg-gray-600"><i class="fa-solid fa-percent mr-2"></i>Puantaj</button>
-                <button onclick="window.showInfoModal('Çıkış yapılıyor...')" class="bg-red-600 text-white py-2 px-5 rounded-lg shadow-md hover:bg-red-700"><i class="fa-solid fa-right-from-bracket mr-2"></i>Çıkış</button>
+                <button id="excelAktarBtn" class="btn-secondary py-2 px-5 rounded-lg shadow-md"><i class="fa-solid fa-file-excel mr-2"></i>Excel'e İndir</button>
             </footer>
-
         </main>
     </div>
 
-    <!-- Bilgilendirme Modalı -->
-    <div id="infoModal" class="modal pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center opacity-0">
-        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="window.closeInfoModal()"></div>
-        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
-            <div class="modal-content py-4 text-left px-6">
-                <div class="flex justify-between items-center pb-3">
-                    <p class="text-2xl font-bold text-fb-blue">Bilgilendirme</p>
-                    <div onclick="window.closeInfoModal()" class="cursor-pointer z-50">
-                        <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18"><path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path></svg>
-                    </div>
-                </div>
-                <p id="infoModalText" class="text-gray-700"></p>
-                <div class="flex justify-end pt-2">
-                    <button onclick="window.closeInfoModal()" class="px-4 bg-fb-blue p-2 rounded-lg text-white hover:bg-fb-yellow hover:text-fb-blue">Tamam</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Onay Modalı (Silme işlemi için) -->
-    <div id="confirmModal" class="modal pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center opacity-0">
-        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
-        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
-            <div class="modal-content py-4 text-left px-6">
-                <div class="flex justify-between items-center pb-3">
-                    <p class="text-2xl font-bold text-red-600">Onay Gerekiyor</p>
-                </div>
-                <p id="confirmModalText" class="text-gray-700"></p>
-                <div class="flex justify-end pt-4 gap-4">
-                    <button id="confirmCancelBtn" class="px-4 bg-gray-300 p-2 rounded-lg text-gray-800 hover:bg-gray-400">İptal</button>
-                    <button id="confirmOkBtn" class="px-4 bg-red-600 p-2 rounded-lg text-white hover:bg-red-700">Evet, Sil</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    <!-- Modallar -->
+    <div id="infoModal" class="modal pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center opacity-0"><div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="window.closeInfoModal()"></div><div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto"><div class="modal-content py-4 text-left px-6"><div class="flex justify-between items-center pb-3"><p class="text-2xl font-bold text-fb-blue">Bilgilendirme</p><div onclick="window.closeInfoModal()" class="cursor-pointer z-50"><svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18"><path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path></svg></div></div><p id="infoModalText" class="text-gray-700"></p><div class="flex justify-end pt-2"><button onclick="window.closeInfoModal()" class="px-4 bg-fb-blue p-2 rounded-lg text-white hover:bg-fb-yellow hover:text-fb-blue">Tamam</button></div></div></div></div>
+    <div id="confirmModal" class="modal pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center opacity-0"><div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div><div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto"><div class="modal-content py-4 text-left px-6"><div class="flex justify-between items-center pb-3"><p class="text-2xl font-bold text-red-600">Onay Gerekiyor</p></div><p id="confirmModalText" class="text-gray-700"></p><div class="flex justify-end pt-4 gap-4"><button id="confirmCancelBtn" class="px-4 bg-gray-300 p-2 rounded-lg text-gray-800 hover:bg-gray-400">İptal</button><button id="confirmOkBtn" class="px-4 bg-red-600 p-2 rounded-lg text-white hover:bg-red-700">Evet, Sil</button></div></div></div></div>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
 
-        // --- DEĞİŞKENLER VE SABİTELER ---
-        const EXCEL_DOSYA_URL = 'https://raw.githubusercontent.com/gokhangeo/isyonetim/main/isyonetim.xlsx';
-
+        // --- GITHUB & DOM DEĞİŞKENLERİ ---
+        const githubOwnerInput = document.getElementById('githubOwner');
+        const githubRepoInput = document.getElementById('githubRepo');
+        const githubPathInput = document.getElementById('githubPath');
+        const githubTokenInput = document.getElementById('githubToken');
+        const saveToGithubBtn = document.getElementById('saveToGithubBtn');
+        const saveBtnText = document.getElementById('saveBtnText');
+        const saveSpinner = document.getElementById('saveSpinner');
+        
         const personelSec = document.getElementById('personelSec');
         const isTuru = document.getElementById('isTuru');
         const birim = document.getElementById('birim');
@@ -226,9 +144,9 @@
         const secilenPersoneller = document.getElementById('secilenPersoneller');
         
         let tumKayitlar = [];
-        let personelListesi = [];
-        let isListesi = [];
-        let birimListesi = [];
+        let personelListesi = [], isListesi = [], birimListesi = [];
+        let originalWorkbook = null; // Orijinal Excel dosyasını tutacak
+        let fileSHA = null; // GitHub'daki dosyanın SHA'sını tutacak
         let silinecekKayitIndex = null;
 
         // --- MODAL YÖNETİMİ ---
@@ -239,102 +157,149 @@
         const confirmOkBtn = document.getElementById('confirmOkBtn');
         const confirmCancelBtn = document.getElementById('confirmCancelBtn');
 
-        // Fonksiyonları global scope'a taşıyoruz.
-        window.closeInfoModal = () => {
-            infoModal.classList.add('opacity-0', 'pointer-events-none');
-        };
-        window.showInfoModal = (text) => {
+        window.closeInfoModal = () => infoModal.classList.add('opacity-0', 'pointer-events-none');
+        window.showInfoModal = (text, isError = false) => {
             infoModalText.textContent = text;
+            infoModal.querySelector('p.text-2xl').className = isError ? "text-2xl font-bold text-red-600" : "text-2xl font-bold text-fb-blue";
             infoModal.classList.remove('opacity-0', 'pointer-events-none');
         };
-        
-        const closeConfirmModal = () => {
-            confirmModal.classList.add('opacity-0', 'pointer-events-none');
-        };
-        window.showConfirmModal = (text, index) => { // Silme için global fonksiyon
+        const closeConfirmModal = () => confirmModal.classList.add('opacity-0', 'pointer-events-none');
+        window.showConfirmModal = (text, index) => {
             silinecekKayitIndex = index;
             confirmModalText.textContent = text;
             confirmModal.classList.remove('opacity-0', 'pointer-events-none');
         };
+        
+        // --- GITHUB API FONKSİYONLARI ---
+        const getApiUrl = () => `https://api.github.com/repos/${githubOwnerInput.value}/${githubRepoInput.value}/contents/${githubPathInput.value}`;
 
-        confirmOkBtn.addEventListener('click', () => {
-            if (silinecekKayitIndex !== null) {
-                tumKayitlar.splice(silinecekKayitIndex, 1);
-                kayitListesiniGuncelle();
-                window.showInfoModal("Kayıt başarıyla silindi.");
-            }
-            closeConfirmModal();
-        });
-        confirmCancelBtn.addEventListener('click', closeConfirmModal);
-
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                window.closeInfoModal();
-                closeConfirmModal();
-            }
-        });
-
-
-        // --- EXCEL VERİ YÜKLEME ---
         const excelVerisiYukle = async () => {
-            if (!EXCEL_DOSYA_URL) {
-                window.showInfoModal('Excel dosya URL adresi tanımlanmamış.');
-                kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-red-500">Excel URL'si yapılandırılmamış.</td></tr>`;
+            kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">Veri yükleniyor...</td></tr>`;
+            const GITHUB_TOKEN = githubTokenInput.value;
+            if (!GITHUB_TOKEN) {
+                kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-orange-500">Lütfen GitHub Token girerek verileri yükleyin.</td></tr>`;
                 return;
             }
 
             try {
-                const response = await fetch(EXCEL_DOSYA_URL);
-                if (!response.ok) throw new Error(`Ağ hatası: ${response.statusText}`);
-                
-                const arrayBuffer = await response.arrayBuffer();
-                const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
+                const response = await fetch(getApiUrl(), {
+                    headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+                });
+                if (!response.ok) throw new Error(`GitHub'dan dosya alınamadı: ${response.statusText}`);
+                const data = await response.json();
+                fileSHA = data.sha; // Dosya SHA'sını sakla
 
-                // Veri listelerini dolduran yardımcı fonksiyon
+                const binaryString = atob(data.content);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                
+                originalWorkbook = XLSX.read(bytes, { type: 'array' });
+                
                 const loadSheetData = (sheetName, selectElement, list, placeholder) => {
-                    const sheet = workbook.Sheets[sheetName];
+                    const sheet = originalWorkbook.Sheets[sheetName];
                     if (sheet) {
                         list.splice(0, list.length, ...XLSX.utils.sheet_to_json(sheet, { header: 1 }).flat().filter(Boolean));
                         selectElement.innerHTML = `<option value="">${placeholder}</option>`;
-                        list.forEach(item => {
-                            selectElement.innerHTML += `<option value="${item}">${item}</option>`;
-                        });
+                        list.forEach(item => selectElement.innerHTML += `<option value="${item}">${item}</option>`);
                     } else {
-                        window.showInfoModal(`'${sheetName}' adında bir Excel sayfası bulunamadı.`);
-                        selectElement.innerHTML = `<option value="">${sheetName} Yüklenemedi</option>`;
+                        window.showInfoModal(`'${sheetName}' adında bir Excel sayfası bulunamadı.`, true);
                     }
                 };
-
+                
                 loadSheetData('Personel', personelSec, personelListesi, 'Personel Seçiniz');
-                // *** DÜZELTME: 'Isler' -> 'İşler' olarak değiştirildi ***
                 loadSheetData('İşler', isTuru, isListesi, 'İş Türü Seçiniz');
                 loadSheetData('Birim', birim, birimListesi, 'Birim Seçiniz');
 
-                // Kayıtlar Sayfasını Yükle
-                const kayitlarSheet = workbook.Sheets['Kayitlar'];
-                 if (kayitlarSheet) {
-                    tumKayitlar = XLSX.utils.sheet_to_json(kayitlarSheet);
-                    kayitListesiniGuncelle();
-                } else {
-                     window.showInfoModal("'Kayitlar' adında bir Excel sayfası bulunamadı. Başlangıçta liste boş olacak.");
-                     kayitListesiniGuncelle();
-                }
+                const kayitlarSheet = originalWorkbook.Sheets['Kayitlar'];
+                tumKayitlar = kayitlarSheet ? XLSX.utils.sheet_to_json(kayitlarSheet) : [];
+                kayitListesiniGuncelle();
+                window.showInfoModal("Veriler GitHub'dan başarıyla yüklendi.");
 
             } catch (error) {
                 console.error('Excel dosyası okunurken hata:', error);
-                window.showInfoModal(`Excel dosyası okunurken bir hata oluştu: ${error.message}`);
-                kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-red-500">Veri yüklenemedi.</td></tr>`;
+                window.showInfoModal(`Excel dosyası okunurken bir hata oluştu: ${error.message}`, true);
+                kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-red-500">Veri yüklenemedi. Token'ı kontrol edin.</td></tr>`;
+            }
+        };
+        
+        const saveDataToGithub = async () => {
+            const GITHUB_TOKEN = githubTokenInput.value;
+            if (!GITHUB_TOKEN) {
+                window.showInfoModal("GitHub Token girilmedi. Değişiklikler kaydedilemez.", true);
+                return;
+            }
+            if (!fileSHA) {
+                window.showInfoModal("Dosya bilgisi (SHA) alınamadı. Lütfen sayfayı yenileyip tekrar deneyin.", true);
+                return;
+            }
+
+            setSaveButtonState(true); // Butonu "Kaydediliyor..." yap
+
+            try {
+                // Yeni kayıtlar sayfasını oluştur
+                const newKayitlarSheet = XLSX.utils.json_to_sheet(tumKayitlar);
+                
+                // Orijinal workbook'taki 'Kayitlar' sayfasını güncelle
+                originalWorkbook.Sheets['Kayitlar'] = newKayitlarSheet;
+                
+                // Workbook'u binary formatına çevir
+                const newWorkbookBinary = XLSX.write(originalWorkbook, { bookType: 'xlsx', type: 'binary' });
+                
+                // Binary string'i Base64'e çevir
+                const newContentBase64 = btoa(newWorkbookBinary);
+                
+                const response = await fetch(getApiUrl(), {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${GITHUB_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `[Kadastro App] Kayıtlar güncellendi - ${new Date().toLocaleString()}`,
+                        content: newContentBase64,
+                        sha: fileSHA
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`GitHub'a kaydetme başarısız: ${errorData.message}`);
+                }
+                
+                const responseData = await response.json();
+                fileSHA = responseData.content.sha; // Yeni SHA'yı güncelle
+                
+                window.showInfoModal("Değişiklikler başarıyla GitHub'a kaydedildi!");
+                setSaveButtonState(false, false); // Kaydetme butonunu pasif yap (değişiklik yok)
+
+            } catch (error) {
+                console.error("GitHub'a kaydetme hatası:", error);
+                window.showInfoModal(`Hata: ${error.message}`, true);
+                setSaveButtonState(false, true); // Butonu tekrar aktif et (hata oldu)
+            }
+        };
+        
+        // --- UI YARDIMCI FONKSİYONLARI ---
+        const setSaveButtonState = (isLoading, hasChanges = true) => {
+            if (isLoading) {
+                saveToGithubBtn.disabled = true;
+                saveBtnText.classList.add('hidden');
+                saveSpinner.classList.remove('hidden');
+            } else {
+                saveSpinner.classList.add('hidden');
+                saveBtnText.classList.remove('hidden');
+                saveToGithubBtn.disabled = !hasChanges;
             }
         };
 
-        // --- KAYIT LİSTESİ GÜNCELLEME ---
         const kayitListesiniGuncelle = () => {
             kayitListesi.innerHTML = '';
             if (tumKayitlar.length === 0) {
                 kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">Henüz kayıt eklenmemiş.</td></tr>`;
                 return;
             }
-
             tumKayitlar.forEach((kayit, index) => {
                 const row = `
                     <tr class="hover:bg-fb-yellow hover:bg-opacity-20">
@@ -348,29 +313,29 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <button class="text-red-600 hover:text-red-900" onclick="window.sil(${index})"><i class="fa-solid fa-trash-alt"></i> Sil</button>
                         </td>
-                    </tr>
-                `;
+                    </tr>`;
                 kayitListesi.innerHTML += row;
             });
         };
         
         window.sil = (index) => {
-            window.showConfirmModal('Bu kaydı silmek istediğinizden emin misiniz?', index);
+            window.showConfirmModal(`'${tumKayitlar[index]['Kayıt No']}' numaralı kaydı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`, index);
         };
 
         // --- EVENT LISTENERS ---
-        document.getElementById('personelEkleBtn').addEventListener('click', () => {
-            const secilen = personelSec.value;
-            if (secilen && !secilenPersoneller.value.includes(secilen)) {
-                secilenPersoneller.value += (secilenPersoneller.value ? '\n' : '') + secilen;
-            }
-        });
+        githubTokenInput.addEventListener('change', excelVerisiYukle);
+        saveToGithubBtn.addEventListener('click', saveDataToGithub);
 
-        document.getElementById('personelTemizleBtn').addEventListener('click', () => {
-            secilenPersoneller.value = '';
+        confirmOkBtn.addEventListener('click', () => {
+            if (silinecekKayitIndex !== null) {
+                tumKayitlar.splice(silinecekKayitIndex, 1);
+                kayitListesiniGuncelle();
+                setSaveButtonState(false, true); // Değişiklik var, kaydet butonunu aktif et
+                window.showInfoModal("Kayıt yerel olarak silindi. Değişikliği kalıcı yapmak için kaydedin.");
+            }
+            closeConfirmModal();
         });
-        
-        document.getElementById('tarih').valueAsDate = new Date();
+        confirmCancelBtn.addEventListener('click', closeConfirmModal);
 
         document.getElementById('isiAktarBtn').addEventListener('click', () => {
             const yeniKayit = {
@@ -382,43 +347,40 @@
                 'İş': document.getElementById('isTuru').value,
                 'Personeller': secilenPersoneller.value.replace(/\n/g, ', ')
             };
-
             if (!yeniKayit['Kayıt No'] || !yeniKayit['İş'] || !yeniKayit['Personeller'] || !yeniKayit['Birim']) {
-                window.showInfoModal('Lütfen Kayıt No, Birim, İş Türü ve Personel alanlarını doldurun.');
+                window.showInfoModal('Lütfen Kayıt No, Birim, İş Türü ve Personel alanlarını doldurun.', true);
                 return;
             }
-
             tumKayitlar.unshift(yeniKayit);
             kayitListesiniGuncelle();
+            setSaveButtonState(false, true); // Değişiklik var, kaydet butonunu aktif et
             
-            // Formu temizle
             document.getElementById('kayitNo').value = '';
             document.getElementById('dosyaSayisi').value = '';
             document.getElementById('parselSayisi').value = '';
             document.getElementById('isTuru').selectedIndex = 0;
             document.getElementById('birim').selectedIndex = 0;
             secilenPersoneller.value = '';
-            window.showInfoModal('Yeni iş kaydı başarıyla eklendi.');
+            window.showInfoModal('Yeni iş kaydı eklendi. Değişikliği kalıcı yapmak için kaydedin.');
         });
-
+        
         document.getElementById('excelAktarBtn').addEventListener('click', () => {
             if (tumKayitlar.length === 0) {
-                window.showInfoModal('Dışa aktarılacak kayıt bulunmuyor.');
-                return;
+                window.showInfoModal('Dışa aktarılacak kayıt bulunmuyor.', true); return;
             }
             const worksheet = XLSX.utils.json_to_sheet(tumKayitlar);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, 'İş Listesi');
-            
             const today = new Date();
             const dateStr = today.getFullYear() + '-' + (today.getMonth() + 1).toString().padStart(2, '0') + '-' + today.getDate().toString().padStart(2, '0');
             XLSX.writeFile(workbook, `Kadastro_Is_Listesi_${dateStr}.xlsx`);
         });
 
-        // --- İLK YÜKLEME ---
-        excelVerisiYukle();
+        // Diğer butonlar ve başlangıç ayarları
+        document.getElementById('personelEkleBtn').addEventListener('click', () => { const secilen = personelSec.value; if (secilen && !secilenPersoneller.value.includes(secilen)) { secilenPersoneller.value += (secilenPersoneller.value ? '\n' : '') + secilen; } });
+        document.getElementById('personelTemizleBtn').addEventListener('click', () => { secilenPersoneller.value = ''; });
+        document.getElementById('tarih').valueAsDate = new Date();
     });
     </script>
-
 </body>
 </html>
