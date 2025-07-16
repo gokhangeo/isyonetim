@@ -41,6 +41,12 @@
         .fa-sync.fa-spin { display: none; }
         .refresh-active .fa-sync:not(.fa-spin) { display: none; }
         .refresh-active .fa-sync.fa-spin { display: inline-block; }
+        /* Açılır/Kapanır ayarlar için stil */
+        #githubSettingsContent {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
@@ -51,34 +57,41 @@
         <!-- Başlık -->
         <header class="bg-fb-blue text-white p-4 rounded-t-lg shadow-lg flex justify-between items-center">
             <h1 class="text-xl sm:text-2xl font-bold"><i class="fa-solid fa-map-location-dot mr-2"></i>Kadastro İş Yönetim Sistemi</h1>
-            <span class="text-xs font-mono">v2.6.0</span>
+            <span class="text-xs font-mono">v2.7.0</span>
         </header>
 
-        <!-- GitHub Ayar Alanı -->
-        <div class="bg-white p-4 my-4 rounded-lg shadow-lg border border-gray-200">
-             <h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4">GitHub Bağlantı Ayarları</h3>
-             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                 <div>
-                     <label for="githubOwner" class="block text-sm font-medium text-gray-700">Repo Sahibi</label>
-                     <input type="text" id="githubOwner" value="gokhangeo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm">
-                 </div>
-                 <div>
-                     <label for="githubRepo" class="block text-sm font-medium text-gray-700">Repo Adı</label>
-                     <input type="text" id="githubRepo" value="isyonetim" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm">
-                 </div>
-                 <div>
-                     <label for="githubPath" class="block text-sm font-medium text-gray-700">Dosya Yolu</label>
-                     <input type="text" id="githubPath" value="isyonetim.xlsx" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm">
-                 </div>
-                 <div class="md:col-span-3">
-                     <label for="githubToken" class="block text-sm font-medium text-gray-700">GitHub Token</label>
-                     <input type="password" id="githubToken" placeholder="GitHub Personal Access Token'ınızı buraya girin" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm">
-                     <p class="text-xs text-gray-500 mt-1">Bu anahtar, GitHub'a otomatik kayıt için gereklidir ve tarayıcınızda güvenli bir şekilde saklanır.</p>
-                 </div>
-             </div>
+        <!-- GitHub Ayar Alanı (Açılır/Kapanır) -->
+        <div class="bg-white my-4 rounded-lg shadow-lg border border-gray-200">
+            <button id="toggleGithubSettings" class="w-full text-left p-4 flex justify-between items-center focus:outline-none">
+                <h3 class="text-lg font-semibold text-fb-blue">GitHub Bağlantı Ayarları</h3>
+                <i id="settingsChevron" class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+            </button>
+            <div id="githubSettingsContent" class="overflow-hidden transition-all duration-500 ease-in-out" style="max-height: 0px;">
+                 <div class="p-4 border-t border-gray-200">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="githubOwner" class="block text-sm font-medium text-gray-700">Repo Sahibi</label>
+                            <input type="text" id="githubOwner" value="gokhangeo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="githubRepo" class="block text-sm font-medium text-gray-700">Repo Adı</label>
+                            <input type="text" id="githubRepo" value="isyonetim" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="githubPath" class="block text-sm font-medium text-gray-700">Dosya Yolu</label>
+                            <input type="text" id="githubPath" value="isyonetim.xlsx" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm">
+                        </div>
+                        <div class="md:col-span-3">
+                            <label for="githubToken" class="block text-sm font-medium text-gray-700">GitHub Token</label>
+                            <input type="password" id="githubToken" placeholder="GitHub Personal Access Token'ınızı buraya girin" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm">
+                            <p class="text-xs text-gray-500 mt-1">Bu anahtar, GitHub'a otomatik kayıt için gereklidir ve tarayıcınızda güvenli bir şekilde saklanır.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <main class="bg-white p-4 sm:p-6 lg:p-8 rounded-b-lg shadow-lg">
+        <main class="bg-white p-4 sm:p-6 lg:p-8 rounded-lg shadow-lg">
             <!-- Form Alanı -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                 <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -170,6 +183,10 @@
         const statusText = document.getElementById('statusText');
         const refreshBtn = document.getElementById('refreshBtn');
         const GITHUB_TOKEN_KEY = 'github_token_kadastro_app';
+        // Açılır/Kapanır ayarlar için
+        const toggleGithubSettingsBtn = document.getElementById('toggleGithubSettings');
+        const githubSettingsContent = document.getElementById('githubSettingsContent');
+        const settingsChevron = document.getElementById('settingsChevron');
 
         // --- DURUM DEĞİŞKENLERİ ---
         let tumKayitlar = [];
@@ -416,7 +433,6 @@
                 return;
             }
             
-            // *** MÜKERRER KAYIT KONTROLÜ EKLENDİ ***
             if (tumKayitlar.some(kayit => String(kayit['Kayıt No']).trim() === kayitNoValue)) {
                 window.showInfoModal(`'${kayitNoValue}' numaralı kayıt zaten mevcut. Lütfen farklı bir numara girin.`, true);
                 return;
@@ -470,6 +486,16 @@
         document.getElementById('personelEkleBtn').addEventListener('click', () => { const secilen = personelSec.value; if (secilen && !secilenPersoneller.value.includes(secilen)) { secilenPersoneller.value += (secilenPersoneller.value ? '\n' : '') + secilen; } });
         document.getElementById('personelTemizleBtn').addEventListener('click', () => { secilenPersoneller.value = ''; });
         
+        // Açılır/Kapanır ayarlar için event listener
+        toggleGithubSettingsBtn.addEventListener('click', () => {
+            settingsChevron.classList.toggle('rotate-180');
+            if (githubSettingsContent.style.maxHeight) {
+                githubSettingsContent.style.maxHeight = null;
+            } else {
+                githubSettingsContent.style.maxHeight = githubSettingsContent.scrollHeight + "px";
+            }
+        });
+
         // --- BAŞLANGIÇ ---
         const init = () => {
             document.getElementById('tarih').valueAsDate = new Date();
@@ -481,6 +507,8 @@
                 updateSyncStatus('status-idle', 'GitHub Token bekleniyor.');
                 kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-orange-500">Başlamak için lütfen GitHub Token'ınızı girin.</td></tr>`;
                 isiAktarBtn.disabled = true;
+                // Token yoksa ayarlar bölümünü açık başlat
+                toggleGithubSettingsBtn.click();
             }
         };
 
