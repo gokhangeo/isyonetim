@@ -51,7 +51,7 @@
         <!-- Başlık -->
         <header class="bg-fb-blue text-white p-4 rounded-t-lg shadow-lg flex justify-between items-center">
             <h1 class="text-xl sm:text-2xl font-bold"><i class="fa-solid fa-map-location-dot mr-2"></i>Kadastro İş Yönetim Sistemi</h1>
-            <span class="text-xs font-mono">v2.1.0</span>
+            <span class="text-xs font-mono">v2.2.0</span>
         </header>
 
         <!-- GitHub Ayar Alanı -->
@@ -223,8 +223,9 @@
             }
 
             try {
+                // *** HATA DÜZELTME: 'Cache-Control' başlığı kaldırıldı ***
                 const response = await fetch(getApiUrl(), {
-                    headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Cache-Control': 'no-cache' }
+                    headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
                 });
                 if (!response.ok) throw new Error(`GitHub'dan dosya alınamadı: ${response.statusText}`);
                 const data = await response.json();
@@ -238,7 +239,6 @@
                 
                 originalWorkbook = XLSX.read(bytes, { type: 'array' });
                 
-                // Hata tespiti: 'Kayitlar' sayfası var mı?
                 const kayitlarSheet = originalWorkbook.Sheets['Kayitlar'];
                 if (!kayitlarSheet) {
                     throw new Error("Excel dosyasında 'Kayitlar' adında bir sayfa bulunamadı. Lütfen dosyanızı kontrol edin.");
@@ -322,7 +322,7 @@
                 console.error("GitHub'a kaydetme hatası:", error);
                 window.showInfoModal(`Otomatik kaydetme sırasında hata oluştu: ${error.message}. Veriler eski haline getiriliyor.`, true);
                 updateSyncStatus('status-error', 'Kaydetme Başarısız!');
-                await excelVerisiYukle(); // Hata durumunda, tutarsızlığı önlemek için veriyi GitHub'dan yeniden yükle
+                await excelVerisiYukle();
             } finally {
                 isSyncing = false;
             }
@@ -336,7 +336,6 @@
                 return;
             }
             let tableHtml = '';
-            // Yeni kayıtlar 'unshift' ile başa eklendiği için, düz bir döngü en yeniyi en üstte gösterecektir.
             tumKayitlar.forEach((kayit, index) => {
                 const row = `
                     <tr class="hover:bg-fb-yellow hover:bg-opacity-20">
@@ -402,7 +401,6 @@
             
             await saveDataToGithub();
 
-            // Formu temizle
             document.getElementById('kayitNo').value = '';
             document.getElementById('dosyaSayisi').value = '';
             document.getElementById('parselSayisi').value = '';
