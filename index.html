@@ -38,6 +38,9 @@
         .status-error { background-color: #ef4444; }
         .status-idle { background-color: #6b7280; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+        .fa-sync.fa-spin { display: none; }
+        .refresh-active .fa-sync:not(.fa-spin) { display: none; }
+        .refresh-active .fa-sync.fa-spin { display: inline-block; }
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
@@ -48,7 +51,7 @@
         <!-- Başlık -->
         <header class="bg-fb-blue text-white p-4 rounded-t-lg shadow-lg flex justify-between items-center">
             <h1 class="text-xl sm:text-2xl font-bold"><i class="fa-solid fa-map-location-dot mr-2"></i>Kadastro İş Yönetim Sistemi</h1>
-            <span class="text-xs font-mono">v2.0.0</span>
+            <span class="text-xs font-mono">v2.1.0</span>
         </header>
 
         <!-- GitHub Ayar Alanı -->
@@ -104,12 +107,16 @@
 
             <!-- Kayıt Listesi -->
             <div>
-                <div class="flex justify-between items-center">
-                    <h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4">İş Listesi</h3>
+                <div class="flex justify-between items-center gap-4">
+                    <h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4 flex-grow">İş Listesi</h3>
                     <div id="syncStatus" class="flex items-center text-sm text-gray-600">
                         <span id="statusDot" class="status-dot status-idle"></span>
                         <span id="statusText">Başlatılıyor...</span>
                     </div>
+                    <button id="refreshBtn" class="p-2 text-gray-600 hover:text-fb-blue transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="Listeyi Yenile">
+                        <i class="fa-solid fa-sync fa-spin"></i>
+                        <i class="fa-solid fa-sync"></i>
+                    </button>
                 </div>
                 <div class="overflow-x-auto bg-white rounded-lg shadow mt-4">
                     <table class="min-w-full divide-y divide-gray-200">
@@ -139,7 +146,7 @@
     <script>
     document.addEventListener('DOMContentLoaded', () => {
 
-        // --- GITHUB & DOM DEĞİŞKENLERİ ---
+        // --- DOM DEĞİŞKENLERİ ---
         const githubOwnerInput = document.getElementById('githubOwner');
         const githubRepoInput = document.getElementById('githubRepo');
         const githubPathInput = document.getElementById('githubPath');
@@ -147,18 +154,17 @@
         const isiAktarBtn = document.getElementById('isiAktarBtn');
         const addBtnText = document.getElementById('addBtnText');
         const addSpinner = document.getElementById('addSpinner');
-        
         const personelSec = document.getElementById('personelSec');
         const isTuru = document.getElementById('isTuru');
         const birim = document.getElementById('birim');
         const kayitListesi = document.getElementById('kayitListesi');
         const secilenPersoneller = document.getElementById('secilenPersoneller');
-
         const statusDot = document.getElementById('statusDot');
         const statusText = document.getElementById('statusText');
-        
+        const refreshBtn = document.getElementById('refreshBtn');
         const GITHUB_TOKEN_KEY = 'github_token_kadastro_app';
 
+        // --- DURUM DEĞİŞKENLERİ ---
         let tumKayitlar = [];
         let personelListesi = [], isListesi = [], birimListesi = [];
         let originalWorkbook = null; 
@@ -196,31 +202,29 @@
         };
 
         const setAddButtonState = (loading) => {
-            if (loading) {
-                isiAktarBtn.disabled = true;
-                addBtnText.classList.add('hidden');
-                addSpinner.classList.remove('hidden');
-            } else {
-                isiAktarBtn.disabled = false;
-                addSpinner.classList.add('hidden');
-                addBtnText.classList.remove('hidden');
-            }
+            isiAktarBtn.disabled = loading;
+            addBtnText.classList.toggle('hidden', loading);
+            addSpinner.classList.toggle('hidden', !loading);
         };
 
         const excelVerisiYukle = async () => {
             updateSyncStatus('status-syncing', 'Veriler Yükleniyor...');
+            refreshBtn.classList.add('refresh-active');
+            refreshBtn.disabled = true;
             kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">Veri yükleniyor...</td></tr>`;
             const GITHUB_TOKEN = githubTokenInput.value;
             if (!GITHUB_TOKEN) {
                 updateSyncStatus('status-idle', 'GitHub Token bekleniyor.');
                 kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-orange-500">Lütfen GitHub Token girerek verileri yükleyin.</td></tr>`;
                 isiAktarBtn.disabled = true;
+                refreshBtn.classList.remove('refresh-active');
+                refreshBtn.disabled = false;
                 return;
             }
 
             try {
                 const response = await fetch(getApiUrl(), {
-                    headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+                    headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Cache-Control': 'no-cache' }
                 });
                 if (!response.ok) throw new Error(`GitHub'dan dosya alınamadı: ${response.statusText}`);
                 const data = await response.json();
@@ -234,6 +238,13 @@
                 
                 originalWorkbook = XLSX.read(bytes, { type: 'array' });
                 
+                // Hata tespiti: 'Kayitlar' sayfası var mı?
+                const kayitlarSheet = originalWorkbook.Sheets['Kayitlar'];
+                if (!kayitlarSheet) {
+                    throw new Error("Excel dosyasında 'Kayitlar' adında bir sayfa bulunamadı. Lütfen dosyanızı kontrol edin.");
+                }
+                tumKayitlar = XLSX.utils.sheet_to_json(kayitlarSheet);
+
                 const loadSheetData = (sheetName, selectElement, list, placeholder) => {
                     const sheet = originalWorkbook.Sheets[sheetName];
                     if (sheet) {
@@ -249,18 +260,19 @@
                 loadSheetData('İşler', isTuru, isListesi, 'İş Türü Seçiniz');
                 loadSheetData('Birim', birim, birimListesi, 'Birim Seçiniz');
 
-                const kayitlarSheet = originalWorkbook.Sheets['Kayitlar'];
-                tumKayitlar = kayitlarSheet ? XLSX.utils.sheet_to_json(kayitlarSheet) : [];
                 kayitListesiniGuncelle();
                 updateSyncStatus('status-synced', `Güncel. Son Yükleme: ${new Date().toLocaleTimeString()}`);
                 isiAktarBtn.disabled = false;
 
             } catch (error) {
                 console.error('Excel dosyası okunurken hata:', error);
-                window.showInfoModal(`Excel dosyası okunurken bir hata oluştu: ${error.message}`, true);
+                window.showInfoModal(`Veri yükleme hatası: ${error.message}`, true);
                 updateSyncStatus('status-error', 'Veri Yüklenemedi!');
-                kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-red-500">Veri yüklenemedi. Token'ı veya ayarları kontrol edin.</td></tr>`;
+                kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-red-500">Veri yüklenemedi. Ayarları veya dosyanızı kontrol edip yenileyin.</td></tr>`;
                 isiAktarBtn.disabled = true;
+            } finally {
+                refreshBtn.classList.remove('refresh-active');
+                refreshBtn.disabled = false;
             }
         };
         
@@ -302,17 +314,15 @@
                 }
                 
                 const responseData = await response.json();
-                fileSHA = responseData.content.sha; // Yeni SHA'yı güncelle
+                fileSHA = responseData.content.sha;
                 
                 updateSyncStatus('status-synced', `Başarıyla Kaydedildi! (${new Date().toLocaleTimeString()})`);
-                window.showInfoModal("Değişiklikler başarıyla GitHub'a kaydedildi!");
-
+                
             } catch (error) {
                 console.error("GitHub'a kaydetme hatası:", error);
                 window.showInfoModal(`Otomatik kaydetme sırasında hata oluştu: ${error.message}. Veriler eski haline getiriliyor.`, true);
                 updateSyncStatus('status-error', 'Kaydetme Başarısız!');
-                // Hata durumunda, tutarsızlığı önlemek için veriyi GitHub'dan yeniden yükle
-                await excelVerisiYukle();
+                await excelVerisiYukle(); // Hata durumunda, tutarsızlığı önlemek için veriyi GitHub'dan yeniden yükle
             } finally {
                 isSyncing = false;
             }
@@ -325,9 +335,9 @@
                 kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">Henüz kayıt eklenmemiş.</td></tr>`;
                 return;
             }
-            // Kayıtları ters sırada göster (yeni eklenen en üstte)
-            [...tumKayitlar].forEach((kayit, index) => {
-                const originalIndex = tumKayitlar.length - 1 - index;
+            let tableHtml = '';
+            // Yeni kayıtlar 'unshift' ile başa eklendiği için, düz bir döngü en yeniyi en üstte gösterecektir.
+            tumKayitlar.forEach((kayit, index) => {
                 const row = `
                     <tr class="hover:bg-fb-yellow hover:bg-opacity-20">
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${kayit['Kayıt No'] || ''}</td>
@@ -338,11 +348,12 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit['Parsel Sayısı'] || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit.Tarih || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button class="text-red-600 hover:text-red-900" onclick="window.sil(${originalIndex})"><i class="fa-solid fa-trash-alt"></i> Sil</button>
+                            <button class="text-red-600 hover:text-red-900" onclick="window.sil(${index})"><i class="fa-solid fa-trash-alt"></i> Sil</button>
                         </td>
                     </tr>`;
-                kayitListesi.insertAdjacentHTML('afterbegin', row);
+                tableHtml += row;
             });
+            kayitListesi.innerHTML = tableHtml;
         };
         
         window.sil = (index) => {
@@ -356,12 +367,15 @@
              excelVerisiYukle();
         });
 
+        refreshBtn.addEventListener('click', excelVerisiYukle);
+
         confirmOkBtn.addEventListener('click', async () => {
             if (silinecekKayitIndex !== null) {
                 tumKayitlar.splice(silinecekKayitIndex, 1);
                 kayitListesiniGuncelle();
                 closeConfirmModal();
                 await saveDataToGithub();
+                window.showInfoModal("Kayıt başarıyla silindi ve değişiklikler GitHub'a kaydedildi.");
             }
         });
         confirmCancelBtn.addEventListener('click', closeConfirmModal);
@@ -395,6 +409,7 @@
             document.getElementById('isTuru').selectedIndex = 0;
             document.getElementById('birim').selectedIndex = 0;
             secilenPersoneller.value = '';
+            window.showInfoModal("Yeni iş eklendi ve değişiklikler GitHub'a kaydedildi.");
             
             setAddButtonState(false);
         });
