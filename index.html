@@ -51,7 +51,7 @@
         <!-- Başlık -->
         <header class="bg-fb-blue text-white p-4 rounded-t-lg shadow-lg flex justify-between items-center">
             <h1 class="text-xl sm:text-2xl font-bold"><i class="fa-solid fa-map-location-dot mr-2"></i>Kadastro İş Yönetim Sistemi</h1>
-            <span class="text-xs font-mono">v2.2.0</span>
+            <span class="text-xs font-mono">v2.4.0</span>
         </header>
 
         <!-- GitHub Ayar Alanı -->
@@ -121,8 +121,16 @@
                 <div class="overflow-x-auto bg-white rounded-lg shadow mt-4">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-fb-blue">
+                            <!-- *** SÜTUN SIRASI DÜZELTİLDİ *** -->
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Kayıt No</th><th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Personeller</th><th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Birim</th><th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">İş</th><th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Dosya Sayısı</th><th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Parsel Sayısı</th><th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Tarih</th><th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">İşlem</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Kayıt No</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Tarih</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Birim</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Dosya Sayısı</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Parsel Sayısı</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">İş</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Personeller</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">İşlem</th>
                             </tr>
                         </thead>
                         <tbody id="kayitListesi" class="bg-white divide-y divide-gray-200">
@@ -223,7 +231,6 @@
             }
 
             try {
-                // *** HATA DÜZELTME: 'Cache-Control' başlığı kaldırıldı ***
                 const response = await fetch(getApiUrl(), {
                     headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
                 });
@@ -243,7 +250,14 @@
                 if (!kayitlarSheet) {
                     throw new Error("Excel dosyasında 'Kayitlar' adında bir sayfa bulunamadı. Lütfen dosyanızı kontrol edin.");
                 }
-                tumKayitlar = XLSX.utils.sheet_to_json(kayitlarSheet);
+
+                // *** SÜTUN SIRASI DÜZELTİLDİ: Excel sırasına göre veri okunuyor ***
+                const headers = ['Kayıt No', 'Tarih', 'Birim', 'Dosya Sayısı', 'Parsel Sayısı', 'İş', 'Personeller'];
+                tumKayitlar = XLSX.utils.sheet_to_json(kayitlarSheet, {
+                    header: headers,
+                    range: 1 
+                });
+
 
                 const loadSheetData = (sheetName, selectElement, list, placeholder) => {
                     const sheet = originalWorkbook.Sheets[sheetName];
@@ -290,9 +304,22 @@
             updateSyncStatus('status-syncing', 'Değişiklikler Kaydediliyor...');
 
             try {
-                const newKayitlarSheet = XLSX.utils.json_to_sheet(tumKayitlar);
-                originalWorkbook.Sheets['Kayitlar'] = newKayitlarSheet;
-                const newWorkbookBinary = XLSX.write(originalWorkbook, { bookType: 'xlsx', type: 'binary' });
+                // *** SÜTUN SIRASI DÜZELTİLDİ: Kaydederken de doğru sıra kullanılıyor ***
+                const headers = ['Kayıt No', 'Tarih', 'Birim', 'Dosya Sayısı', 'Parsel Sayısı', 'İş', 'Personeller'];
+                const newKayitlarSheet = XLSX.utils.json_to_sheet(tumKayitlar, { header: headers });
+                
+                // Orijinal workbook'u kullanmak yerine yeni bir workbook oluşturmak daha güvenli
+                const newWorkbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(newWorkbook, newKayitlarSheet, "Kayitlar");
+                
+                // Diğer sayfaları da yeni workbook'a ekle
+                ['Personel', 'İşler', 'Birim'].forEach(sheetName => {
+                    if (originalWorkbook.Sheets[sheetName]) {
+                        XLSX.utils.book_append_sheet(newWorkbook, originalWorkbook.Sheets[sheetName], sheetName);
+                    }
+                });
+
+                const newWorkbookBinary = XLSX.write(newWorkbook, { bookType: 'xlsx', type: 'binary' });
                 const newContentBase64 = btoa(newWorkbookBinary);
                 
                 const response = await fetch(getApiUrl(), {
@@ -315,6 +342,7 @@
                 
                 const responseData = await response.json();
                 fileSHA = responseData.content.sha;
+                originalWorkbook = newWorkbook; // Başarılı olursa workbook'u güncelle
                 
                 updateSyncStatus('status-synced', `Başarıyla Kaydedildi! (${new Date().toLocaleTimeString()})`);
                 
@@ -337,15 +365,16 @@
             }
             let tableHtml = '';
             tumKayitlar.forEach((kayit, index) => {
+                // *** SÜTUN SIRASI DÜZELTİLDİ ***
                 const row = `
                     <tr class="hover:bg-fb-yellow hover:bg-opacity-20">
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${kayit['Kayıt No'] || ''}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit.Personeller || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit.Tarih || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit.Birim || ''}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit.İş || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit['Dosya Sayısı'] || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit['Parsel Sayısı'] || ''}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit.Tarih || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit.İş || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit.Personeller || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <button class="text-red-600 hover:text-red-900" onclick="window.sil(${index})"><i class="fa-solid fa-trash-alt"></i> Sil</button>
                         </td>
