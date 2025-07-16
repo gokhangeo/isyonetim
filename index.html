@@ -70,7 +70,7 @@
             <h1 class="text-xl sm:text-2xl font-bold">
                 <i class="fa-solid fa-map-location-dot mr-2"></i>Kadastro İş Yönetim Sistemi
             </h1>
-            <span class="text-xs font-mono">v1.2.0</span>
+            <span class="text-xs font-mono">v1.3.0</span>
         </header>
 
         <main class="bg-white p-4 sm:p-6 lg:p-8 rounded-b-lg shadow-lg">
@@ -306,7 +306,8 @@
                 };
 
                 loadSheetData('Personel', personelSec, personelListesi, 'Personel Seçiniz');
-                loadSheetData('Isler', isTuru, isListesi, 'İş Türü Seçiniz');
+                // *** DÜZELTME: 'Isler' -> 'İşler' olarak değiştirildi ***
+                loadSheetData('İşler', isTuru, isListesi, 'İş Türü Seçiniz');
                 loadSheetData('Birim', birim, birimListesi, 'Birim Seçiniz');
 
                 // Kayıtlar Sayfasını Yükle
