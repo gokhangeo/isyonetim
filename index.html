@@ -54,13 +54,13 @@
         <!-- Başlık -->
         <header class="bg-fb-blue text-white p-4 rounded-t-lg shadow-lg flex justify-between items-center">
             <h1 class="text-lg sm:text-2xl font-bold"><i class="fa-solid fa-map-location-dot mr-2"></i>Kadastro İş Yönetim Sistemi</h1>
-            <span class="text-xs font-mono">v2.9.6</span>
+            <span class="text-xs font-mono">v2.9.7</span>
         </header>
 
         <main class="bg-white p-2 sm:p-6 lg:p-8 rounded-lg shadow-lg mt-4">
             <!-- Form Alanı -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="lg:col-span-2 bg-gray-50 p-4 rounded-lg border shadow-sm grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="sm:col-span-2"><h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4">Yeni İş Kaydı</h3></div>
                     <div class="sm:col-span-2"><label for="kayitNo" class="block text-sm font-medium text-gray-700">Kayıt No (MEGSİS)</label><input type="text" id="kayitNo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"></div>
                     <div><label for="tarih" class="block text-sm font-medium text-gray-700">Tarih</label><input type="date" id="tarih" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"></div>
@@ -75,7 +75,7 @@
                         </button>
                     </div>
                 </div>
-                <div class="lg:col-span-1 bg-gray-50 p-4 rounded-lg border">
+                <div class="lg:col-span-1 bg-gray-50 p-4 rounded-lg border shadow-sm">
                     <h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4">Personel Seçimi</h3>
                     <div><label for="personelSec" class="block text-sm font-medium text-gray-700">Personel</label><select id="personelSec" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"><option>Yükleniyor...</option></select></div>
                     <div class="mt-2 flex gap-2"><button id="personelEkleBtn" class="flex-grow btn-secondary py-2 px-4 rounded-lg text-sm">Ekle <i class="fa-solid fa-arrow-down ml-1"></i></button></div>
@@ -136,7 +136,6 @@
         const GITHUB_OWNER = 'gokhangeo';
         const GITHUB_REPO = 'isyonetim';
         const GITHUB_PATH = 'isyonetim.xlsx';
-        // Token'ınız iki parça halinde saklanıyor
         const TOKEN_PART_1 = 'ghp_d6Qq8rEMXLB5CL9t';
         const TOKEN_PART_2 = 'cVK1vZJIQwGGi33v1IGd';
 
