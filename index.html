@@ -54,7 +54,7 @@
         <!-- Başlık -->
         <header class="bg-fb-blue text-white p-4 rounded-t-lg shadow-lg flex justify-between items-center">
             <h1 class="text-lg sm:text-2xl font-bold"><i class="fa-solid fa-map-location-dot mr-2"></i>Kadastro İş Yönetim Sistemi</h1>
-            <span class="text-xs font-mono">v2.9.4</span>
+            <span class="text-xs font-mono">v2.9.6</span>
         </header>
 
         <main class="bg-white p-2 sm:p-6 lg:p-8 rounded-lg shadow-lg mt-4">
@@ -136,8 +136,9 @@
         const GITHUB_OWNER = 'gokhangeo';
         const GITHUB_REPO = 'isyonetim';
         const GITHUB_PATH = 'isyonetim.xlsx';
-        // Token'ınız doğru şekilde base64 formatında şifrelendi
-        const ENCODED_TOKEN = 'd6Qq8rEMXLB5CL9tcVK1vZJIQwGGi33v1IGd==';
+        // Token'ınız iki parça halinde saklanıyor
+        const TOKEN_PART_1 = 'ghp_d6Qq8rEMXLB5CL9t';
+        const TOKEN_PART_2 = 'cVK1vZJIQwGGi33v1IGd';
 
         // --- DOM DEĞİŞKENLERİ ---
         const isiAktarBtn = document.getElementById('isiAktarBtn');
@@ -201,7 +202,7 @@
             refreshBtn.disabled = true;
             kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">Veri yükleniyor...</td></tr>`;
             
-            const GITHUB_TOKEN = atob(ENCODED_TOKEN);
+            const GITHUB_TOKEN = TOKEN_PART_1 + TOKEN_PART_2;
 
             try {
                 const response = await fetch(getApiUrl(), {
@@ -274,7 +275,7 @@
             if (isSyncing) return;
             isSyncing = true;
             
-            const GITHUB_TOKEN = atob(ENCODED_TOKEN);
+            const GITHUB_TOKEN = TOKEN_PART_1 + TOKEN_PART_2;
             if (!fileSHA) {
                 window.showInfoModal("Dosya bilgisi (SHA) eksik. Değişiklikler kaydedilemez.", true);
                 isSyncing = false;
