@@ -44,11 +44,6 @@
         .fa-sync.fa-spin { display: none; }
         .refresh-active .fa-sync:not(.fa-spin) { display: none; }
         .refresh-active .fa-sync.fa-spin { display: inline-block; }
-        #githubSettingsContent {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.5s ease-in-out;
-        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
@@ -59,41 +54,10 @@
         <!-- Başlık -->
         <header class="bg-fb-blue text-white p-4 rounded-t-lg shadow-lg flex justify-between items-center">
             <h1 class="text-lg sm:text-2xl font-bold"><i class="fa-solid fa-map-location-dot mr-2"></i>Kadastro İş Yönetim Sistemi</h1>
-            <span class="text-xs font-mono">v2.8.0</span>
+            <span class="text-xs font-mono">v2.9.4</span>
         </header>
 
-        <!-- GitHub Ayar Alanı (Açılır/Kapanır) -->
-        <div class="bg-white my-4 rounded-lg shadow-lg border border-gray-200">
-            <button id="toggleGithubSettings" class="w-full text-left p-4 flex justify-between items-center focus:outline-none">
-                <h3 class="text-lg font-semibold text-fb-blue">GitHub Bağlantı Ayarları</h3>
-                <i id="settingsChevron" class="fa-solid fa-chevron-down transition-transform duration-300"></i>
-            </button>
-            <div id="githubSettingsContent" class="overflow-hidden transition-all duration-500 ease-in-out" style="max-height: 0px;">
-                 <div class="p-4 border-t border-gray-200">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label for="githubOwner" class="block text-sm font-medium text-gray-700">Repo Sahibi</label>
-                            <input type="text" id="githubOwner" value="gokhangeo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm">
-                        </div>
-                        <div>
-                            <label for="githubRepo" class="block text-sm font-medium text-gray-700">Repo Adı</label>
-                            <input type="text" id="githubRepo" value="isyonetim" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm">
-                        </div>
-                        <div>
-                            <label for="githubPath" class="block text-sm font-medium text-gray-700">Dosya Yolu</label>
-                            <input type="text" id="githubPath" value="isyonetim.xlsx" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm">
-                        </div>
-                        <div class="md:col-span-3">
-                            <label for="githubToken" class="block text-sm font-medium text-gray-700">GitHub Token</label>
-                            <input type="password" id="githubToken" placeholder="GitHub Personal Access Token'ınızı buraya girin" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm">
-                            <p class="text-xs text-gray-500 mt-1">Bu anahtar, GitHub'a otomatik kayıt için gereklidir ve tarayıcınızda güvenli bir şekilde saklanır.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <main class="bg-white p-2 sm:p-6 lg:p-8 rounded-lg shadow-lg">
+        <main class="bg-white p-2 sm:p-6 lg:p-8 rounded-lg shadow-lg mt-4">
             <!-- Form Alanı -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                 <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -168,11 +132,14 @@
     <script>
     document.addEventListener('DOMContentLoaded', () => {
 
+        // --- GITHUB AYARLARI VE GÖMÜLÜ TOKEN ---
+        const GITHUB_OWNER = 'gokhangeo';
+        const GITHUB_REPO = 'isyonetim';
+        const GITHUB_PATH = 'isyonetim.xlsx';
+        // Token'ınız doğru şekilde base64 formatında şifrelendi
+        const ENCODED_TOKEN = 'RXmLxqG86nKYpZpq8btvWqgFplfBo30WBD3B==';
+
         // --- DOM DEĞİŞKENLERİ ---
-        const githubOwnerInput = document.getElementById('githubOwner');
-        const githubRepoInput = document.getElementById('githubRepo');
-        const githubPathInput = document.getElementById('githubPath');
-        const githubTokenInput = document.getElementById('githubToken');
         const isiAktarBtn = document.getElementById('isiAktarBtn');
         const addBtnText = document.getElementById('addBtnText');
         const addSpinner = document.getElementById('addSpinner');
@@ -184,10 +151,6 @@
         const statusDot = document.getElementById('statusDot');
         const statusText = document.getElementById('statusText');
         const refreshBtn = document.getElementById('refreshBtn');
-        const GITHUB_TOKEN_KEY = 'github_token_kadastro_app';
-        const toggleGithubSettingsBtn = document.getElementById('toggleGithubSettings');
-        const githubSettingsContent = document.getElementById('githubSettingsContent');
-        const settingsChevron = document.getElementById('settingsChevron');
 
         // --- DURUM DEĞİŞKENLERİ ---
         let tumKayitlar = [];
@@ -219,7 +182,7 @@
         };
         
         // --- GITHUB API & ANA FONKSİYONLAR ---
-        const getApiUrl = () => `https://api.github.com/repos/${githubOwnerInput.value}/${githubRepoInput.value}/contents/${githubPathInput.value}`;
+        const getApiUrl = () => `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`;
 
         const updateSyncStatus = (status, text) => {
             statusDot.className = `status-dot ${status}`;
@@ -237,21 +200,19 @@
             refreshBtn.classList.add('refresh-active');
             refreshBtn.disabled = true;
             kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">Veri yükleniyor...</td></tr>`;
-            const GITHUB_TOKEN = githubTokenInput.value;
-            if (!GITHUB_TOKEN) {
-                updateSyncStatus('status-idle', 'GitHub Token bekleniyor.');
-                kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-orange-500">Lütfen GitHub Token girerek verileri yükleyin.</td></tr>`;
-                isiAktarBtn.disabled = true;
-                refreshBtn.classList.remove('refresh-active');
-                refreshBtn.disabled = false;
-                return;
-            }
+            
+            const GITHUB_TOKEN = atob(ENCODED_TOKEN);
 
             try {
                 const response = await fetch(getApiUrl(), {
                     headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
                 });
-                if (!response.ok) throw new Error(`GitHub'dan dosya alınamadı: ${response.statusText}`);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`GitHub API Hatası: ${response.status} ${response.statusText}. Detay: ${errorText}`);
+                }
+                
                 const data = await response.json();
                 fileSHA = data.sha;
 
@@ -274,7 +235,6 @@
                     range: 1 
                 });
 
-
                 const loadSheetData = (sheetName, selectElement, list, placeholder) => {
                     const sheet = originalWorkbook.Sheets[sheetName];
                     if (sheet) {
@@ -296,9 +256,13 @@
 
             } catch (error) {
                 console.error('Excel dosyası okunurken hata:', error);
-                window.showInfoModal(`Veri yükleme hatası: ${error.message}`, true);
+                let userErrorMessage = `Veri yükleme hatası: ${error.message}`;
+                if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+                    userErrorMessage = "Ağ hatası: GitHub API'sine ulaşılamadı. Lütfen internet bağlantınızı kontrol edin veya daha sonra tekrar deneyin.";
+                }
+                window.showInfoModal(userErrorMessage, true);
                 updateSyncStatus('status-error', 'Veri Yüklenemedi!');
-                kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-red-500">Veri yüklenemedi. Ayarları veya dosyanızı kontrol edip yenileyin.</td></tr>`;
+                kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-red-500">Veri yüklenemedi. İnternet bağlantınızı veya Token'ı kontrol edin.</td></tr>`;
                 isiAktarBtn.disabled = true;
             } finally {
                 refreshBtn.classList.remove('refresh-active');
@@ -310,9 +274,9 @@
             if (isSyncing) return;
             isSyncing = true;
             
-            const GITHUB_TOKEN = githubTokenInput.value;
-            if (!GITHUB_TOKEN || !fileSHA) {
-                window.showInfoModal("GitHub Token veya dosya bilgisi (SHA) eksik. Değişiklikler kaydedilemez.", true);
+            const GITHUB_TOKEN = atob(ENCODED_TOKEN);
+            if (!fileSHA) {
+                window.showInfoModal("Dosya bilgisi (SHA) eksik. Değişiklikler kaydedilemez.", true);
                 isSyncing = false;
                 return;
             }
@@ -354,8 +318,8 @@
                 });
 
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(`GitHub'a kaydetme başarısız: ${errorData.message}`);
+                    const errorText = await response.text();
+                    throw new Error(`GitHub API Hatası: ${response.status} ${response.statusText}. Detay: ${errorText}`);
                 }
                 
                 const responseData = await response.json();
@@ -366,7 +330,11 @@
                 
             } catch (error) {
                 console.error("GitHub'a kaydetme hatası:", error);
-                window.showInfoModal(`Otomatik kaydetme sırasında hata oluştu: ${error.message}. Veriler eski haline getiriliyor.`, true);
+                let userErrorMessage = `Otomatik kaydetme sırasında hata oluştu: ${error.message}. Veriler eski haline getiriliyor.`;
+                if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+                    userErrorMessage = "Ağ hatası: Değişiklikler kaydedilemedi. Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.";
+                }
+                window.showInfoModal(userErrorMessage, true);
                 updateSyncStatus('status-error', 'Kaydetme Başarısız!');
                 await excelVerisiYukle();
             } finally {
@@ -407,11 +375,6 @@
         };
 
         // --- EVENT LISTENERS ---
-        githubTokenInput.addEventListener('change', () => {
-             localStorage.setItem(GITHUB_TOKEN_KEY, githubTokenInput.value);
-             excelVerisiYukle();
-        });
-
         refreshBtn.addEventListener('click', excelVerisiYukle);
 
         confirmOkBtn.addEventListener('click', async () => {
@@ -487,28 +450,10 @@
         document.getElementById('personelEkleBtn').addEventListener('click', () => { const secilen = personelSec.value; if (secilen && !secilenPersoneller.value.includes(secilen)) { secilenPersoneller.value += (secilenPersoneller.value ? '\n' : '') + secilen; } });
         document.getElementById('personelTemizleBtn').addEventListener('click', () => { secilenPersoneller.value = ''; });
         
-        toggleGithubSettingsBtn.addEventListener('click', () => {
-            settingsChevron.classList.toggle('rotate-180');
-            if (githubSettingsContent.style.maxHeight) {
-                githubSettingsContent.style.maxHeight = null;
-            } else {
-                githubSettingsContent.style.maxHeight = githubSettingsContent.scrollHeight + "px";
-            }
-        });
-
         // --- BAŞLANGIÇ ---
         const init = () => {
             document.getElementById('tarih').valueAsDate = new Date();
-            const savedToken = localStorage.getItem(GITHUB_TOKEN_KEY);
-            if (savedToken) {
-                githubTokenInput.value = savedToken;
-                excelVerisiYukle();
-            } else {
-                updateSyncStatus('status-idle', 'GitHub Token bekleniyor.');
-                kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-orange-500">Başlamak için lütfen GitHub Token'ınızı girin.</td></tr>`;
-                isiAktarBtn.disabled = true;
-                toggleGithubSettingsBtn.click();
-            }
+            excelVerisiYukle();
         };
 
         init();
