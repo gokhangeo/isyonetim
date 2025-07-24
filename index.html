@@ -54,7 +54,7 @@
         <!-- Başlık -->
         <header class="bg-fb-blue text-white p-4 rounded-t-lg shadow-lg flex justify-between items-center">
             <h1 class="text-lg sm:text-2xl font-bold"><i class="fa-solid fa-map-location-dot mr-2"></i>Kadastro İş Yönetim Sistemi</h1>
-            <span class="text-xs font-mono">v2.9.7</span>
+            <span class="text-xs font-mono">v3.0.0</span>
         </header>
 
         <main class="bg-white p-2 sm:p-6 lg:p-8 rounded-lg shadow-lg mt-4">
@@ -235,7 +235,26 @@
                     range: 1 
                 });
 
-                const loadSheetData = (sheetName, selectElement, list, placeholder) => {
+                // *** PERSONEL LİSTESİ YÜKLEME GÜNCELLENDİ (UNVAN İLE BİRLİKTE) ***
+                const personelSheet = originalWorkbook.Sheets['Personel'];
+                if (personelSheet) {
+                    personelListesi.length = 0; // Listeyi temizle
+                    const personelData = XLSX.utils.sheet_to_json(personelSheet, { header: 1 });
+                    personelSec.innerHTML = `<option value="">Personel Seçiniz</option>`;
+                    personelData.forEach(row => {
+                        if (row && row[0]) { // Satırın ve ilk hücrenin dolu olduğunu kontrol et
+                            const name = String(row[0]).trim();
+                            const title = row[1] ? String(row[1]).trim() : '';
+                            const displayText = title ? `${name} (${title})` : name;
+                            personelListesi.push(displayText);
+                            personelSec.innerHTML += `<option value="${displayText}">${displayText}</option>`;
+                        }
+                    });
+                } else {
+                    window.showInfoModal("'Personel' adında bir Excel sayfası bulunamadı.", true);
+                }
+
+                const loadSimpleSheetData = (sheetName, selectElement, list, placeholder) => {
                     const sheet = originalWorkbook.Sheets[sheetName];
                     if (sheet) {
                         list.splice(0, list.length, ...XLSX.utils.sheet_to_json(sheet, { header: 1 }).flat().filter(Boolean));
@@ -246,9 +265,8 @@
                     }
                 };
                 
-                loadSheetData('Personel', personelSec, personelListesi, 'Personel Seçiniz');
-                loadSheetData('İşler', isTuru, isListesi, 'İş Türü Seçiniz');
-                loadSheetData('Birim', birim, birimListesi, 'Birim Seçiniz');
+                loadSimpleSheetData('İşler', isTuru, isListesi, 'İş Türü Seçiniz');
+                loadSimpleSheetData('Birim', birim, birimListesi, 'Birim Seçiniz');
 
                 kayitListesiniGuncelle();
                 updateSyncStatus('status-synced', `Güncel. Son Yükleme: ${new Date().toLocaleTimeString()}`);
