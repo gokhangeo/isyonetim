@@ -44,6 +44,11 @@
         .fa-sync.fa-spin { display: none; }
         .refresh-active .fa-sync:not(.fa-spin) { display: none; }
         .refresh-active .fa-sync.fa-spin { display: inline-block; }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
@@ -54,7 +59,7 @@
         <!-- Başlık -->
         <header class="bg-fb-blue text-white p-4 rounded-t-lg shadow-lg flex justify-between items-center">
             <h1 class="text-lg sm:text-2xl font-bold"><i class="fa-solid fa-map-location-dot mr-2"></i>Kadastro İş Yönetim Sistemi</h1>
-            <span class="text-xs font-mono">v3.0.0</span>
+            <span class="text-xs font-mono">v3.3.1</span>
         </header>
 
         <main class="bg-white p-2 sm:p-6 lg:p-8 rounded-lg shadow-lg mt-4">
@@ -81,6 +86,49 @@
                     <div class="mt-2 flex gap-2"><button id="personelEkleBtn" class="flex-grow btn-secondary py-2 px-4 rounded-lg text-sm">Ekle <i class="fa-solid fa-arrow-down ml-1"></i></button></div>
                     <div class="mt-4"><label for="secilenPersoneller" class="block text-sm font-medium text-gray-700">Görevli Personeller</label><textarea id="secilenPersoneller" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm" readonly></textarea></div>
                     <div class="mt-2 flex gap-2"><button id="personelTemizleBtn" class="flex-grow bg-red-600 text-white py-2 px-4 rounded-lg text-sm hover:bg-red-700">Temizle <i class="fa-solid fa-trash ml-1"></i></button></div>
+                </div>
+            </div>
+
+            <!-- Personel İş Yükü (Açılır/Kapanır) -->
+            <div class="my-8">
+                <h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4">Personel İş Yükü</h3>
+                <div class="space-y-2">
+                    <!-- Mühendisler -->
+                    <div class="border rounded-lg">
+                        <button class="accordion-toggle w-full flex justify-between items-center p-4 text-left font-semibold text-fb-blue focus:outline-none">
+                            <span>Mühendisler</span>
+                            <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                        </button>
+                        <div class="accordion-content">
+                            <table class="min-w-full">
+                                <tbody id="muhendisIsYukuListesi" class="bg-white divide-y divide-gray-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- Kontrol Memurları -->
+                    <div class="border rounded-lg">
+                        <button class="accordion-toggle w-full flex justify-between items-center p-4 text-left font-semibold text-fb-blue focus:outline-none">
+                            <span>Kontrol Memurları</span>
+                            <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                        </button>
+                        <div class="accordion-content">
+                            <table class="min-w-full">
+                                <tbody id="kontrolMemuruIsYukuListesi" class="bg-white divide-y divide-gray-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- Teknisyenler -->
+                    <div class="border rounded-lg">
+                        <button class="accordion-toggle w-full flex justify-between items-center p-4 text-left font-semibold text-fb-blue focus:outline-none">
+                            <span>Teknisyenler</span>
+                            <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                        </button>
+                        <div class="accordion-content">
+                            <table class="min-w-full">
+                                <tbody id="teknisyenIsYukuListesi" class="bg-white divide-y divide-gray-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -151,10 +199,14 @@
         const statusDot = document.getElementById('statusDot');
         const statusText = document.getElementById('statusText');
         const refreshBtn = document.getElementById('refreshBtn');
+        const muhendisIsYukuListesi = document.getElementById('muhendisIsYukuListesi');
+        const kontrolMemuruIsYukuListesi = document.getElementById('kontrolMemuruIsYukuListesi');
+        const teknisyenIsYukuListesi = document.getElementById('teknisyenIsYukuListesi');
 
         // --- DURUM DEĞİŞKENLERİ ---
         let tumKayitlar = [];
         let personelListesi = [], isListesi = [], birimListesi = [];
+        let personelDataList = []; 
         let originalWorkbook = null; 
         let fileSHA = null; 
         let silinecekKayitIndex = null;
@@ -235,18 +287,17 @@
                     range: 1 
                 });
 
-                // *** PERSONEL LİSTESİ YÜKLEME GÜNCELLENDİ (UNVAN İLE BİRLİKTE) ***
                 const personelSheet = originalWorkbook.Sheets['Personel'];
                 if (personelSheet) {
-                    personelListesi.length = 0; // Listeyi temizle
-                    const personelData = XLSX.utils.sheet_to_json(personelSheet, { header: 1 });
+                    personelDataList = [];
+                    const personelRawData = XLSX.utils.sheet_to_json(personelSheet, { header: 1 });
                     personelSec.innerHTML = `<option value="">Personel Seçiniz</option>`;
-                    personelData.forEach(row => {
-                        if (row && row[0]) { // Satırın ve ilk hücrenin dolu olduğunu kontrol et
+                    personelRawData.forEach(row => {
+                        if (row && row[0]) {
                             const name = String(row[0]).trim();
                             const title = row[1] ? String(row[1]).trim() : '';
                             const displayText = title ? `${name} (${title})` : name;
-                            personelListesi.push(displayText);
+                            personelDataList.push({ name: name, title: title, displayText: displayText });
                             personelSec.innerHTML += `<option value="${displayText}">${displayText}</option>`;
                         }
                     });
@@ -269,6 +320,7 @@
                 loadSimpleSheetData('Birim', birim, birimListesi, 'Birim Seçiniz');
 
                 kayitListesiniGuncelle();
+                personelIsYukuGuncelle();
                 updateSyncStatus('status-synced', `Güncel. Son Yükleme: ${new Date().toLocaleTimeString()}`);
                 isiAktarBtn.disabled = false;
 
@@ -361,6 +413,63 @@
         };
         
         // --- UI YARDIMCI FONKSİYONLARI ---
+        const personelIsYukuGuncelle = () => {
+            const isYuku = new Map();
+            personelDataList.forEach(p => isYuku.set(p.displayText, { count: 0, title: p.title, name: p.name }));
+
+            tumKayitlar.forEach(kayit => {
+                if (kayit.Personeller) {
+                    const atananlar = kayit.Personeller.split(',').map(p => p.trim());
+                    atananlar.forEach(atanan => {
+                        if (isYuku.has(atanan)) {
+                            isYuku.get(atanan).count++;
+                        }
+                    });
+                }
+            });
+
+            const gruplar = {
+                muhendisler: [],
+                kontrolMemurlari: [],
+                teknisyenler: []
+            };
+
+            isYuku.forEach((data) => {
+                const personelYuku = { personel: data.name, isSayisi: data.count };
+                if (data.title.includes('Mühendis')) {
+                    gruplar.muhendisler.push(personelYuku);
+                } else if (data.title.includes('Kontrol')) {
+                    gruplar.kontrolMemurlari.push(personelYuku);
+                } else if (data.title.includes('Teknisyen') || data.title.includes('Tekniker')) {
+                    gruplar.teknisyenler.push(personelYuku);
+                }
+            });
+
+            const populateWorkloadTable = (tbody, data) => {
+                tbody.innerHTML = '';
+                data.sort((a, b) => b.isSayisi - a.isSayisi);
+                
+                if (data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-gray-500 text-sm">Personel yok.</td></tr>`;
+                    return;
+                }
+                
+                let tableHtml = '';
+                data.forEach(item => {
+                    tableHtml += `
+                        <tr class="hover:bg-fb-yellow hover:bg-opacity-20">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.personel}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold text-center">${item.isSayisi}</td>
+                        </tr>`;
+                });
+                tbody.innerHTML = tableHtml;
+            };
+
+            populateWorkloadTable(muhendisIsYukuListesi, gruplar.muhendisler);
+            populateWorkloadTable(kontrolMemuruIsYukuListesi, gruplar.kontrolMemurlari);
+            populateWorkloadTable(teknisyenIsYukuListesi, gruplar.teknisyenler);
+        };
+
         const kayitListesiniGuncelle = () => {
             kayitListesi.innerHTML = '';
             if (tumKayitlar.length === 0) {
@@ -399,6 +508,7 @@
             if (silinecekKayitIndex !== null) {
                 tumKayitlar.splice(silinecekKayitIndex, 1);
                 kayitListesiniGuncelle();
+                personelIsYukuGuncelle();
                 closeConfirmModal();
                 await saveDataToGithub();
                 window.showInfoModal("Kayıt başarıyla silindi ve değişiklikler GitHub'a kaydedildi.");
@@ -439,6 +549,7 @@
             
             tumKayitlar.unshift(yeniKayit);
             kayitListesiniGuncelle();
+            personelIsYukuGuncelle();
             
             await saveDataToGithub();
 
@@ -468,6 +579,20 @@
         document.getElementById('personelEkleBtn').addEventListener('click', () => { const secilen = personelSec.value; if (secilen && !secilenPersoneller.value.includes(secilen)) { secilenPersoneller.value += (secilenPersoneller.value ? '\n' : '') + secilen; } });
         document.getElementById('personelTemizleBtn').addEventListener('click', () => { secilenPersoneller.value = ''; });
         
+        document.querySelectorAll('.accordion-toggle').forEach(button => {
+            button.addEventListener('click', () => {
+                const content = button.nextElementSibling;
+                const icon = button.querySelector('i');
+                
+                icon.classList.toggle('rotate-180');
+                if (content.style.maxHeight) {
+                    content.style.maxHeight = null;
+                } else {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                } 
+            });
+        });
+
         // --- BAŞLANGIÇ ---
         const init = () => {
             document.getElementById('tarih').valueAsDate = new Date();
@@ -479,3 +604,5 @@
     </script>
 </body>
 </html>
+```
+I made some changes. I have corrected the syntax error in the JavaScript code that was causing the application to fa
