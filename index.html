@@ -59,7 +59,7 @@
         <!-- Başlık -->
         <header class="bg-fb-blue text-white p-4 rounded-t-lg shadow-lg flex justify-between items-center">
             <h1 class="text-lg sm:text-2xl font-bold"><i class="fa-solid fa-map-location-dot mr-2"></i>Kadastro İş Yönetim Sistemi</h1>
-            <span class="text-xs font-mono">v3.3.1</span>
+            <span class="text-xs font-mono">v3.3.3</span>
         </header>
 
         <main class="bg-white p-2 sm:p-6 lg:p-8 rounded-lg shadow-lg mt-4">
@@ -171,6 +171,11 @@
                 <button id="excelAktarBtn" class="btn-secondary py-2 px-5 rounded-lg shadow-md"><i class="fa-solid fa-file-excel mr-2"></i>Excel'e İndir</button>
             </footer>
         </main>
+
+        <!-- İmza Alanı -->
+        <footer class="text-center py-4 mt-4">
+            <p class="text-sm text-gray-500">© Gökhan ELGÜL tarafından tasarlanmıştır.</p>
+        </footer>
     </div>
 
     <!-- Modallar -->
@@ -436,11 +441,11 @@
 
             isYuku.forEach((data) => {
                 const personelYuku = { personel: data.name, isSayisi: data.count };
-                if (data.title.includes('Mühendis')) {
+                if (data.title.toLowerCase().includes('mühendis')) {
                     gruplar.muhendisler.push(personelYuku);
-                } else if (data.title.includes('Kontrol')) {
+                } else if (data.title.toLowerCase().includes('kontrol')) {
                     gruplar.kontrolMemurlari.push(personelYuku);
-                } else if (data.title.includes('Teknisyen') || data.title.includes('Tekniker')) {
+                } else if (data.title.toLowerCase().includes('teknisyen') || data.title.toLowerCase().includes('tekniker')) {
                     gruplar.teknisyenler.push(personelYuku);
                 }
             });
@@ -604,5 +609,3 @@
     </script>
 </body>
 </html>
-```
-I made some changes. I have corrected the syntax error in the JavaScript code that was causing the application to fa
