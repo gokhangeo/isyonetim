@@ -377,7 +377,7 @@
 
             if (user && user.password === passwordInput.value) {
                 const userData = { username, role: user.role, ilce: user.ilce };
-                currentUser = userData; // <<< HATA DÜZELTME: Global kullanıcıyı burada ayarla
+                currentUser = userData;
                 sessionStorage.setItem('loggedInUser', JSON.stringify(userData));
                 showMainApp();
             } else {
@@ -501,7 +501,7 @@
 
             try {
                 const response = await fetch(getApiUrl(), {
-                    headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Cache-Control': 'no-cache' }
+                    headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
                 });
 
                 if (!response.ok) {
@@ -621,8 +621,7 @@
             updateSyncStatus('status-syncing', 'Değişiklikler Kaydediliyor...');
 
             try {
-                // Mevcut workbook'u tekrar oku, çünkü yeni kayıtlar eklenmiş olabilir
-                const currentResponse = await fetch(getApiUrl(), { headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Cache-Control': 'no-cache' }});
+                const currentResponse = await fetch(getApiUrl(), { headers: { 'Authorization': `token ${GITHUB_TOKEN}` }});
                 const currentData = await currentResponse.json();
                 const currentBinaryString = atob(currentData.content);
                 const currentBytes = new Uint8Array(currentBinaryString.length);
@@ -662,7 +661,7 @@
                     body: JSON.stringify({
                         message: `[Kadastro App] Yeni kayıt eklendi: ${yeniKayit['Kayıt No']} - ${new Date().toLocaleString()}`,
                         content: newContentBase64,
-                        sha: currentData.sha // En güncel SHA'yı kullan
+                        sha: currentData.sha
                     })
                 });
 
@@ -672,8 +671,8 @@
                 }
                 
                 const responseData = await response.json();
-                fileSHA = responseData.content.sha; // Yeni SHA'yı al
-                originalWorkbook = workbookToUpdate; // Lokal workbook'u güncelle
+                fileSHA = responseData.content.sha;
+                originalWorkbook = workbookToUpdate;
                 
                 updateSyncStatus('status-synced', `Başarıyla Kaydedildi! (${new Date().toLocaleTimeString()})`);
                 
@@ -775,10 +774,7 @@
         };
         
         window.sil = (index) => {
-            // Silme işlemi şimdilik devre dışı bırakıldı, çünkü ilçe bazlı silme karmaşık.
             window.showInfoModal("Silme işlemi için yönetici ile görüşün.", true);
-            // const kayitNo = tumKayitlar[index]['Kayıt No'] || 'isimsiz';
-            // window.showConfirmModal(`'${kayitNo}' numaralı kaydı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`, index);
         };
 
         // --- EVENT LISTENERS ---
@@ -820,10 +816,8 @@
 
             setAddButtonState(true);
             
-            // Yeni kaydı GitHub'a gönder
             await saveDataToGithub(yeniKayit);
 
-            // Lokal listeyi de güncelle ve arayüzü yenile
             tumKayitlar.unshift(yeniKayit);
             kayitListesiniGuncelle();
             personelIsYukuGuncelle();
