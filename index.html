@@ -170,7 +170,7 @@
                 <h1 class="text-lg sm:text-2xl font-bold"><i class="fa-solid fa-map-location-dot mr-2"></i>Kadastro İş Yönetim Sistemi</h1>
                 <div class="text-right">
                     <span id="loggedInUser" class="text-sm font-semibold block"></span>
-                    <span class="text-xs font-mono">v3.4.0</span>
+                    <span class="text-xs font-mono">v3.5.0</span>
                 </div>
             </header>
 
@@ -520,7 +520,6 @@
                 
                 originalWorkbook = XLSX.read(bytes, { type: 'array' });
                 
-                // Verileri role göre filtrele
                 if (currentUser.role === 'admin') {
                     const kayitlarSheet = originalWorkbook.Sheets['Kayitlar'];
                      if (!kayitlarSheet) {
@@ -529,7 +528,7 @@
                     } else {
                         tumKayitlar = XLSX.utils.sheet_to_json(kayitlarSheet);
                     }
-                } else { // ilce kullanıcısı
+                } else {
                     const ilceSheet = originalWorkbook.Sheets[currentUser.ilce];
                     if (!ilceSheet) {
                         tumKayitlar = [];
@@ -538,7 +537,6 @@
                         tumKayitlar = XLSX.utils.sheet_to_json(ilceSheet);
                     }
                 }
-
 
                 const personelSheet = originalWorkbook.Sheets['Personel'];
                 if (personelSheet) {
@@ -607,88 +605,109 @@
             }
         };
         
-        const saveDataToGithub = async (yeniKayit) => {
-            if (isSyncing) return;
-            isSyncing = true;
-            
+        const updateGithubFile = async (workbook, message) => {
             const GITHUB_TOKEN = TOKEN_PART_1 + TOKEN_PART_2;
-            if (!fileSHA) {
-                window.showInfoModal("Dosya bilgisi (SHA) eksik. Değişiklikler kaydedilemez.", true);
-                isSyncing = false;
-                return;
+            const newWorkbookBinary = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
+            const newContentBase64 = btoa(newWorkbookBinary);
+
+            const response = await fetch(getApiUrl(), {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: message,
+                    content: newContentBase64,
+                    sha: fileSHA
+                })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`GitHub API Hatası: ${response.status} ${response.statusText}. Detay: ${errorText}`);
             }
 
-            updateSyncStatus('status-syncing', 'Değişiklikler Kaydediliyor...');
+            const responseData = await response.json();
+            fileSHA = responseData.content.sha;
+            originalWorkbook = workbook;
+        };
+
+        const addNewRecordToGithub = async (yeniKayit) => {
+            if (isSyncing) return;
+            isSyncing = true;
+            updateSyncStatus('status-syncing', 'Yeni kayıt ekleniyor...');
 
             try {
-                const currentResponse = await fetch(getApiUrl(), { headers: { 'Authorization': `token ${GITHUB_TOKEN}` }});
-                const currentData = await currentResponse.json();
-                const currentBinaryString = atob(currentData.content);
-                const currentBytes = new Uint8Array(currentBinaryString.length);
-                for (let i = 0; i < currentBinaryString.length; i++) { currentBytes[i] = currentBinaryString.charCodeAt(i); }
-                const workbookToUpdate = XLSX.read(currentBytes, { type: 'array' });
-
                 const headers = ['Kayıt No', 'Tarih', 'Birim', 'Dosya Sayısı', 'Parsel Sayısı', 'İş', 'Personeller'];
-
-                // 1. Ana 'Kayitlar' sayfasına ekle
-                const kayitlarSheet = workbookToUpdate.Sheets['Kayitlar'] || XLSX.utils.aoa_to_sheet([headers]);
-                XLSX.utils.sheet_add_json(kayitlarSheet, [yeniKayit], { skipHeader: true, origin: -1 });
-                workbookToUpdate.Sheets['Kayitlar'] = kayitlarSheet;
-
-                // 2. İlçe özel sayfasına ekle
                 const ilceAdi = yeniKayit.Birim;
-                const ilceSheet = workbookToUpdate.Sheets[ilceAdi] || XLSX.utils.aoa_to_sheet([headers]);
-                XLSX.utils.sheet_add_json(ilceSheet, [yeniKayit], { skipHeader: true, origin: -1 });
-                workbookToUpdate.Sheets[ilceAdi] = ilceSheet;
-                
-                // Diğer sayfaları koru
-                ['Personel', 'İşler', 'Birim'].forEach(sheetName => {
-                     if (originalWorkbook.Sheets[sheetName] && !workbookToUpdate.Sheets[sheetName]) {
-                        workbookToUpdate.Sheets[sheetName] = originalWorkbook.Sheets[sheetName];
-                    }
-                });
 
+                // Ana kayıtlar sayfasını güncelle
+                const kayitlarSheet = originalWorkbook.Sheets['Kayitlar'] || XLSX.utils.aoa_to_sheet([headers]);
+                const kayitlarData = XLSX.utils.sheet_to_json(kayitlarSheet);
+                kayitlarData.push(yeniKayit);
+                const newKayitlarSheet = XLSX.utils.json_to_sheet(kayitlarData, { header: headers });
+                originalWorkbook.Sheets['Kayitlar'] = newKayitlarSheet;
 
-                const newWorkbookBinary = XLSX.write(workbookToUpdate, { bookType: 'xlsx', type: 'binary' });
-                const newContentBase64 = btoa(newWorkbookBinary);
-                
-                const response = await fetch(getApiUrl(), {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `token ${GITHUB_TOKEN}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: `[Kadastro App] Yeni kayıt eklendi: ${yeniKayit['Kayıt No']} - ${new Date().toLocaleString()}`,
-                        content: newContentBase64,
-                        sha: currentData.sha
-                    })
-                });
+                // İlçe sayfasını güncelle
+                const ilceSheet = originalWorkbook.Sheets[ilceAdi] || XLSX.utils.aoa_to_sheet([headers]);
+                const ilceData = XLSX.utils.sheet_to_json(ilceSheet);
+                ilceData.push(yeniKayit);
+                const newIlceSheet = XLSX.utils.json_to_sheet(ilceData, { header: headers });
+                originalWorkbook.Sheets[ilceAdi] = newIlceSheet;
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`GitHub API Hatası: ${response.status} ${response.statusText}. Detay: ${errorText}`);
-                }
-                
-                const responseData = await response.json();
-                fileSHA = responseData.content.sha;
-                originalWorkbook = workbookToUpdate;
-                
-                updateSyncStatus('status-synced', `Başarıyla Kaydedildi! (${new Date().toLocaleTimeString()})`);
-                
+                await updateGithubFile(originalWorkbook, `[Kadastro App] Yeni kayıt eklendi: ${yeniKayit['Kayıt No']}`);
+                updateSyncStatus('status-synced', 'Yeni kayıt başarıyla eklendi!');
+
             } catch (error) {
-                console.error("GitHub'a kaydetme hatası:", error);
-                let userErrorMessage = `Otomatik kaydetme sırasında hata oluştu: ${error.message}.`;
-                if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-                    userErrorMessage = "Ağ hatası: Değişiklikler kaydedilemedi. Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.";
-                }
-                window.showInfoModal(userErrorMessage, true);
-                updateSyncStatus('status-error', 'Kaydetme Başarısız!');
+                console.error("Yeni kayıt ekleme hatası:", error);
+                window.showInfoModal(`Kayıt eklenirken hata oluştu: ${error.message}`, true);
+                updateSyncStatus('status-error', 'Kayıt eklenemedi!');
+                await excelVerisiYukle(); // Hata durumunda veriyi yeniden yükle
             } finally {
                 isSyncing = false;
             }
         };
         
+        const deleteRecordFromGithub = async (kayitToDelete) => {
+            if (isSyncing) return;
+            isSyncing = true;
+            updateSyncStatus('status-syncing', 'Kayıt siliniyor...');
+            
+            try {
+                const kayitNo = kayitToDelete['Kayıt No'];
+                const ilceAdi = kayitToDelete.Birim;
+                const headers = ['Kayıt No', 'Tarih', 'Birim', 'Dosya Sayısı', 'Parsel Sayısı', 'İş', 'Personeller'];
+
+                // Ana kayıtlar sayfasını güncelle
+                const kayitlarSheet = originalWorkbook.Sheets['Kayitlar'];
+                if (kayitlarSheet) {
+                    const kayitlarData = XLSX.utils.sheet_to_json(kayitlarSheet);
+                    const updatedKayitlarData = kayitlarData.filter(row => row['Kayıt No'] != kayitNo);
+                    originalWorkbook.Sheets['Kayitlar'] = XLSX.utils.json_to_sheet(updatedKayitlarData, { header: headers });
+                }
+
+                // İlçe sayfasını güncelle
+                const ilceSheet = originalWorkbook.Sheets[ilceAdi];
+                if (ilceSheet) {
+                    const ilceData = XLSX.utils.sheet_to_json(ilceSheet);
+                    const updatedIlceData = ilceData.filter(row => row['Kayıt No'] != kayitNo);
+                    originalWorkbook.Sheets[ilceAdi] = XLSX.utils.json_to_sheet(updatedIlceData, { header: headers });
+                }
+
+                await updateGithubFile(originalWorkbook, `[Kadastro App] Kayıt silindi: ${kayitNo}`);
+                updateSyncStatus('status-synced', 'Kayıt başarıyla silindi!');
+
+            } catch (error) {
+                console.error("Kayıt silme hatası:", error);
+                window.showInfoModal(`Kayıt silinirken hata oluştu: ${error.message}`, true);
+                updateSyncStatus('status-error', 'Kayıt silinemedi!');
+                await excelVerisiYukle(); // Hata durumunda veriyi yeniden yükle
+            } finally {
+                isSyncing = false;
+            }
+        };
+
         // --- UI YARDIMCI FONKSİYONLARI ---
         const personelIsYukuGuncelle = () => {
             const isYuku = new Map();
@@ -774,14 +793,27 @@
         };
         
         window.sil = (index) => {
-            window.showInfoModal("Silme işlemi için yönetici ile görüşün.", true);
+            const kayitNo = tumKayitlar[index]['Kayıt No'] || 'isimsiz';
+            window.showConfirmModal(`'${kayitNo}' numaralı kaydı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`, index);
         };
 
         // --- EVENT LISTENERS ---
         refreshBtn.addEventListener('click', excelVerisiYukle);
 
         confirmOkBtn.addEventListener('click', async () => {
-             // Silme işlemi şimdilik devre dışı.
+            if (silinecekKayitIndex !== null) {
+                const kayitToDelete = tumKayitlar[silinecekKayitIndex];
+                closeConfirmModal();
+                
+                await deleteRecordFromGithub(kayitToDelete);
+
+                // Lokal veriyi ve UI'ı güncelle
+                tumKayitlar.splice(silinecekKayitIndex, 1);
+                kayitListesiniGuncelle();
+                personelIsYukuGuncelle();
+                window.showInfoModal("Kayıt başarıyla silindi.");
+                silinecekKayitIndex = null;
+            }
         });
         confirmCancelBtn.addEventListener('click', closeConfirmModal);
 
@@ -816,7 +848,7 @@
 
             setAddButtonState(true);
             
-            await saveDataToGithub(yeniKayit);
+            await addNewRecordToGithub(yeniKayit);
 
             tumKayitlar.unshift(yeniKayit);
             kayitListesiniGuncelle();
