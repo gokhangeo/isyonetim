@@ -4,9 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kadastro İş Yönetim Sistemi - Giriş</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS (xlsx) Kütüphanesi CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Font Awesome Ikonları için -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Three.js (Animasyonlu Arka Plan için) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root {
@@ -141,8 +145,10 @@
 </head>
 <body class="bg-gray-100 font-sans">
 
+    <!-- Animasyonlu Gece Gökyüzü Arka Planı -->
     <canvas id="dynamic-bg"></canvas>
 
+    <!-- Giriş Ekranı -->
     <div id="login-overlay">
         <div id="login-box">
             <h2 class="text-fb-yellow"><i class="fa-solid fa-map-location-dot mr-2"></i>Kadastro İş Yönetim Sistemi</h2>
@@ -155,15 +161,21 @@
         </div>
     </div>
 
+    <!-- Ana Uygulama Konteyneri -->
     <div id="main-app-wrapper">
         <div class="container mx-auto p-2 sm:p-4 lg:p-8">
 
+            <!-- Başlık -->
             <header class="bg-fb-blue text-white p-4 rounded-t-lg shadow-lg flex justify-between items-center">
                 <h1 class="text-lg sm:text-2xl font-bold"><i class="fa-solid fa-map-location-dot mr-2"></i>Kadastro İş Yönetim Sistemi</h1>
-                <span class="text-xs font-mono">v3.3.3</span>
+                <div class="text-right">
+                    <span id="loggedInUser" class="text-sm font-semibold block"></span>
+                    <span class="text-xs font-mono">v3.4.0</span>
+                </div>
             </header>
 
             <main class="bg-white p-2 sm:p-6 lg:p-8 rounded-lg shadow-lg mt-4">
+                <!-- Form Alanı -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                     <div class="lg:col-span-2 bg-gray-50 p-4 rounded-lg border shadow-sm grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="sm:col-span-2"><h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4">Yeni İş Kaydı</h3></div>
@@ -189,9 +201,11 @@
                     </div>
                 </div>
 
+                <!-- Personel İş Yükü (Açılır/Kapanır) -->
                 <div class="my-8">
                     <h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4">Personel İş Yükü</h3>
                     <div class="space-y-2">
+                        <!-- Mühendisler -->
                         <div class="border rounded-lg">
                             <button class="accordion-toggle w-full flex justify-between items-center p-4 text-left font-semibold text-fb-blue focus:outline-none">
                                 <span>Mühendisler</span>
@@ -203,6 +217,7 @@
                                 </table>
                             </div>
                         </div>
+                        <!-- Kontrol Memurları -->
                         <div class="border rounded-lg">
                             <button class="accordion-toggle w-full flex justify-between items-center p-4 text-left font-semibold text-fb-blue focus:outline-none">
                                 <span>Kontrol Memurları</span>
@@ -214,6 +229,7 @@
                                 </table>
                             </div>
                         </div>
+                        <!-- Teknisyenler -->
                         <div class="border rounded-lg">
                             <button class="accordion-toggle w-full flex justify-between items-center p-4 text-left font-semibold text-fb-blue focus:outline-none">
                                 <span>Teknisyenler</span>
@@ -228,6 +244,7 @@
                     </div>
                 </div>
 
+                <!-- Kayıt Listesi -->
                 <div>
                     <div class="flex flex-wrap justify-between items-center gap-4">
                         <h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4 flex-grow">İş Listesi</h3>
@@ -261,11 +278,13 @@
                     </div>
                 </div>
 
+                <!-- Alt Butonlar -->
                 <footer class="mt-8 pt-6 border-t-2 border-gray-200 flex flex-wrap gap-4 justify-center">
                     <button id="excelAktarBtn" class="btn-secondary py-2 px-5 rounded-lg shadow-md"><i class="fa-solid fa-file-excel mr-2"></i>Excel'e İndir</button>
                 </footer>
             </main>
 
+            <!-- İmza Alanı -->
             <footer class="text-center py-4 mt-4">
                 <p class="text-sm text-gray-500">© Gökhan ELGÜL tarafından tasarlanmıştır.</p>
             </footer>
@@ -273,6 +292,7 @@
     </div>
 
 
+    <!-- Modallar -->
     <div id="infoModal" class="modal pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center opacity-0"><div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="window.closeInfoModal()"></div><div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto"><div class="modal-content py-4 text-left px-6"><div class="flex justify-between items-center pb-3"><p class="text-2xl font-bold text-fb-blue">Bilgilendirme</p><div onclick="window.closeInfoModal()" class="cursor-pointer z-50"><svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18"><path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path></svg></div></div><p id="infoModalText" class="text-gray-700"></p><div class="flex justify-end pt-2"><button onclick="window.closeInfoModal()" class="px-4 bg-fb-blue p-2 rounded-lg text-white hover:bg-fb-yellow hover:text-fb-blue">Tamam</button></div></div></div></div>
     <div id="confirmModal" class="modal pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center opacity-0"><div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div><div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto"><div class="modal-content py-4 text-left px-6"><div class="flex justify-between items-center pb-3"><p class="text-2xl font-bold text-red-600">Onay Gerekiyor</p></div><p id="confirmModalText" class="text-gray-700"></p><div class="flex justify-end pt-4 gap-4"><button id="confirmCancelBtn" class="px-4 bg-gray-300 p-2 rounded-lg text-gray-800 hover:bg-gray-400">İptal</button><button id="confirmOkBtn" class="px-4 bg-red-600 p-2 rounded-lg text-white hover:bg-red-700">Evet, Sil</button></div></div></div></div>
 
@@ -285,6 +305,17 @@
         const GITHUB_PATH = 'isyonetim.xlsx';
         const TOKEN_PART_1 = 'ghp_d6Qq8rEMXLB5CL9t';
         const TOKEN_PART_2 = 'cVK1vZJIQwGGi33v1IGd';
+
+        // --- KULLANICI BİLGİLERİ ---
+        const users = {
+            "mersinisyonetim": { password: "334450", role: "admin", ilce: "Tümü" },
+            "mersin": { password: "503344", role: "ilce", ilce: "Merkez İlçe" },
+            "anamur": { password: "503345", role: "ilce", ilce: "Anamur" },
+            "silifke": { password: "503346", role: "ilce", ilce: "Silifke" },
+            "erdemli": { password: "503347", role: "ilce", ilce: "Erdemli" },
+            "mut": { password: "503348", role: "ilce", ilce: "Mut" },
+            "tarsus": { password: "503349", role: "ilce", ilce: "Tarsus" }
+        };
 
         // --- DOM DEĞİŞKENLERİ ---
         const isiAktarBtn = document.getElementById('isiAktarBtn');
@@ -301,6 +332,7 @@
         const muhendisIsYukuListesi = document.getElementById('muhendisIsYukuListesi');
         const kontrolMemuruIsYukuListesi = document.getElementById('kontrolMemuruIsYukuListesi');
         const teknisyenIsYukuListesi = document.getElementById('teknisyenIsYukuListesi');
+        const loggedInUserSpan = document.getElementById('loggedInUser');
 
         // --- DURUM DEĞİŞKENLERİ ---
         let tumKayitlar = [];
@@ -310,6 +342,7 @@
         let fileSHA = null;
         let silinecekKayitIndex = null;
         let isSyncing = false;
+        let currentUser = null;
 
         // --- MODAL YÖNETİMİ ---
         const infoModal = document.getElementById('infoModal');
@@ -339,19 +372,14 @@
             const loginError = document.getElementById('login-error');
             const loginBox = document.getElementById('login-box');
             
-            const dogruKullaniciAdi = "mersinisyonetim";
-            const dogruSifre = "334450";
+            const username = usernameInput.value.toLowerCase().trim();
+            const user = users[username];
 
-            if (usernameInput.value === dogruKullaniciAdi && passwordInput.value === dogruSifre) {
-                sessionStorage.setItem('isLoggedIn', 'true');
-                const loginOverlay = document.getElementById('login-overlay');
-                loginOverlay.style.opacity = '0';
-                setTimeout(() => {
-                    loginOverlay.style.display = 'none';
-                    document.body.style.overflow = 'auto'; // scrollbar'ı geri getir
-                    document.getElementById('main-app-wrapper').style.display = 'block';
-                    initApp(); // Uygulamayı başlat
-                }, 500);
+            if (user && user.password === passwordInput.value) {
+                const userData = { username, role: user.role, ilce: user.ilce };
+                currentUser = userData; // <<< HATA DÜZELTME: Global kullanıcıyı burada ayarla
+                sessionStorage.setItem('loggedInUser', JSON.stringify(userData));
+                showMainApp();
             } else {
                 loginError.textContent = 'Kullanıcı adı veya şifre hatalı!';
                 loginBox.classList.add('shake');
@@ -361,12 +389,22 @@
             }
         };
 
-        const checkLoginStatus = () => {
-            if (sessionStorage.getItem('isLoggedIn') === 'true') {
-                document.getElementById('login-overlay').style.display = 'none';
-                 document.body.style.overflow = 'auto'; // scrollbar'ı geri getir
+        const showMainApp = () => {
+            const loginOverlay = document.getElementById('login-overlay');
+            loginOverlay.style.opacity = '0';
+            setTimeout(() => {
+                loginOverlay.style.display = 'none';
+                document.body.style.overflow = 'auto';
                 document.getElementById('main-app-wrapper').style.display = 'block';
-                initApp(); // Uygulamayı başlat
+                initApp();
+            }, 500);
+        };
+
+        const checkLoginStatus = () => {
+            const userData = sessionStorage.getItem('loggedInUser');
+            if (userData) {
+                currentUser = JSON.parse(userData);
+                showMainApp();
             } else {
                 const loginButton = document.getElementById('login-button');
                 const passwordInput = document.getElementById('password');
@@ -379,27 +417,26 @@
 
         const initAnimatedBackground = () => {
             const bgCanvas = document.getElementById('dynamic-bg');
+            if (!bgCanvas) return;
             const scene = new THREE.Scene();
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             const renderer = new THREE.WebGLRenderer({ canvas: bgCanvas, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             
-            // Gece gökyüzü gradient'i
             const generateGradient = () => {
                 const canvas = document.createElement('canvas');
                 canvas.width = 1;
                 canvas.height = 512;
                 const context = canvas.getContext('2d');
                 const gradient = context.createLinearGradient(0, 0, 0, 512);
-                gradient.addColorStop(0, '#020111'); // Üst - Koyu
-                gradient.addColorStop(1, '#191970'); // Alt - Gece yarısı mavisi
+                gradient.addColorStop(0, '#020111');
+                gradient.addColorStop(1, '#191970');
                 context.fillStyle = gradient;
                 context.fillRect(0, 0, 1, 512);
                 return canvas;
             };
             
-            const gradientTexture = new THREE.CanvasTexture(generateGradient());
-            scene.background = gradientTexture;
+            scene.background = new THREE.CanvasTexture(generateGradient());
 
             const particlesGeometry = new THREE.BufferGeometry();
             const particlesCnt = 5000;
@@ -421,6 +458,7 @@
             const clock = new THREE.Clock();
             
             const animate = () => {
+                requestAnimationFrame(animate);
                 const elapsedTime = clock.getElapsedTime();
                 particlesMesh.rotation.y = -0.05 * elapsedTime;
                 if(mouseX > 0) {
@@ -428,7 +466,6 @@
                     particlesMesh.rotation.y += -mouseX * (elapsedTime * 0.00003);
                 }
                 renderer.render(scene, camera);
-                window.requestAnimationFrame(animate);
             };
             animate();
 
@@ -464,7 +501,7 @@
 
             try {
                 const response = await fetch(getApiUrl(), {
-                    headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+                    headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Cache-Control': 'no-cache' }
                 });
 
                 if (!response.ok) {
@@ -483,16 +520,25 @@
                 
                 originalWorkbook = XLSX.read(bytes, { type: 'array' });
                 
-                const kayitlarSheet = originalWorkbook.Sheets['Kayitlar'];
-                if (!kayitlarSheet) {
-                    throw new Error("Excel dosyasında 'Kayitlar' adında bir sayfa bulunamadı. Lütfen dosyanızı kontrol edin.");
+                // Verileri role göre filtrele
+                if (currentUser.role === 'admin') {
+                    const kayitlarSheet = originalWorkbook.Sheets['Kayitlar'];
+                     if (!kayitlarSheet) {
+                        tumKayitlar = [];
+                        console.warn("'Kayitlar' sayfası bulunamadı.");
+                    } else {
+                        tumKayitlar = XLSX.utils.sheet_to_json(kayitlarSheet);
+                    }
+                } else { // ilce kullanıcısı
+                    const ilceSheet = originalWorkbook.Sheets[currentUser.ilce];
+                    if (!ilceSheet) {
+                        tumKayitlar = [];
+                        console.warn(`'${currentUser.ilce}' sayfası bulunamadı.`);
+                    } else {
+                        tumKayitlar = XLSX.utils.sheet_to_json(ilceSheet);
+                    }
                 }
 
-                const headers = ['Kayıt No', 'Tarih', 'Birim', 'Dosya Sayısı', 'Parsel Sayısı', 'İş', 'Personeller'];
-                tumKayitlar = XLSX.utils.sheet_to_json(kayitlarSheet, {
-                    header: headers,
-                    range: 1
-                });
 
                 const personelSheet = originalWorkbook.Sheets['Personel'];
                 if (personelSheet) {
@@ -515,16 +561,30 @@
                 const loadSimpleSheetData = (sheetName, selectElement, list, placeholder) => {
                     const sheet = originalWorkbook.Sheets[sheetName];
                     if (sheet) {
-                        list.splice(0, list.length, ...XLSX.utils.sheet_to_json(sheet, { header: 1 }).flat().filter(Boolean));
+                        const data = XLSX.utils.sheet_to_json(sheet, { header: 1 }).flat().filter(Boolean);
+                        list.splice(0, list.length, ...data);
                         selectElement.innerHTML = `<option value="">${placeholder}</option>`;
-                        list.forEach(item => selectElement.innerHTML += `<option value="${item}">${item}</option>`);
+                        
+                        if (currentUser.role === 'admin') {
+                            list.forEach(item => selectElement.innerHTML += `<option value="${item}">${item}</option>`);
+                        } else {
+                            selectElement.innerHTML = `<option value="${currentUser.ilce}" selected>${currentUser.ilce}</option>`;
+                            selectElement.disabled = true;
+                        }
+
                     } else {
                         window.showInfoModal(`'${sheetName}' adında bir Excel sayfası bulunamadı.`, true);
                     }
                 };
                 
-                loadSimpleSheetData('İşler', isTuru, isListesi, 'İş Türü Seçiniz');
                 loadSimpleSheetData('Birim', birim, birimListesi, 'Birim Seçiniz');
+                const islerSheet = originalWorkbook.Sheets['İşler'];
+                if(islerSheet){
+                    isListesi = XLSX.utils.sheet_to_json(islerSheet, { header: 1 }).flat().filter(Boolean);
+                    isTuru.innerHTML = `<option value="">İş Türü Seçiniz</option>`;
+                    isListesi.forEach(item => isTuru.innerHTML += `<option value="${item}">${item}</option>`);
+                }
+
 
                 kayitListesiniGuncelle();
                 personelIsYukuGuncelle();
@@ -547,7 +607,7 @@
             }
         };
         
-        const saveDataToGithub = async () => {
+        const saveDataToGithub = async (yeniKayit) => {
             if (isSyncing) return;
             isSyncing = true;
             
@@ -561,24 +621,36 @@
             updateSyncStatus('status-syncing', 'Değişiklikler Kaydediliyor...');
 
             try {
+                // Mevcut workbook'u tekrar oku, çünkü yeni kayıtlar eklenmiş olabilir
+                const currentResponse = await fetch(getApiUrl(), { headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Cache-Control': 'no-cache' }});
+                const currentData = await currentResponse.json();
+                const currentBinaryString = atob(currentData.content);
+                const currentBytes = new Uint8Array(currentBinaryString.length);
+                for (let i = 0; i < currentBinaryString.length; i++) { currentBytes[i] = currentBinaryString.charCodeAt(i); }
+                const workbookToUpdate = XLSX.read(currentBytes, { type: 'array' });
+
                 const headers = ['Kayıt No', 'Tarih', 'Birim', 'Dosya Sayısı', 'Parsel Sayısı', 'İş', 'Personeller'];
-                
-                const dataForSheet = tumKayitlar.map(kayit => {
-                    return headers.map(header => kayit[header] || '');
-                });
 
-                const newKayitlarSheet = XLSX.utils.aoa_to_sheet([headers, ...dataForSheet]);
+                // 1. Ana 'Kayitlar' sayfasına ekle
+                const kayitlarSheet = workbookToUpdate.Sheets['Kayitlar'] || XLSX.utils.aoa_to_sheet([headers]);
+                XLSX.utils.sheet_add_json(kayitlarSheet, [yeniKayit], { skipHeader: true, origin: -1 });
+                workbookToUpdate.Sheets['Kayitlar'] = kayitlarSheet;
 
-                const newWorkbook = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(newWorkbook, newKayitlarSheet, "Kayitlar");
+                // 2. İlçe özel sayfasına ekle
+                const ilceAdi = yeniKayit.Birim;
+                const ilceSheet = workbookToUpdate.Sheets[ilceAdi] || XLSX.utils.aoa_to_sheet([headers]);
+                XLSX.utils.sheet_add_json(ilceSheet, [yeniKayit], { skipHeader: true, origin: -1 });
+                workbookToUpdate.Sheets[ilceAdi] = ilceSheet;
                 
+                // Diğer sayfaları koru
                 ['Personel', 'İşler', 'Birim'].forEach(sheetName => {
-                    if (originalWorkbook.Sheets[sheetName]) {
-                        XLSX.utils.book_append_sheet(newWorkbook, originalWorkbook.Sheets[sheetName], sheetName);
+                     if (originalWorkbook.Sheets[sheetName] && !workbookToUpdate.Sheets[sheetName]) {
+                        workbookToUpdate.Sheets[sheetName] = originalWorkbook.Sheets[sheetName];
                     }
                 });
 
-                const newWorkbookBinary = XLSX.write(newWorkbook, { bookType: 'xlsx', type: 'binary' });
+
+                const newWorkbookBinary = XLSX.write(workbookToUpdate, { bookType: 'xlsx', type: 'binary' });
                 const newContentBase64 = btoa(newWorkbookBinary);
                 
                 const response = await fetch(getApiUrl(), {
@@ -588,9 +660,9 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        message: `[Kadastro App] Kayıtlar güncellendi - ${new Date().toLocaleString()}`,
+                        message: `[Kadastro App] Yeni kayıt eklendi: ${yeniKayit['Kayıt No']} - ${new Date().toLocaleString()}`,
                         content: newContentBase64,
-                        sha: fileSHA
+                        sha: currentData.sha // En güncel SHA'yı kullan
                     })
                 });
 
@@ -600,20 +672,19 @@
                 }
                 
                 const responseData = await response.json();
-                fileSHA = responseData.content.sha;
-                originalWorkbook = newWorkbook;
+                fileSHA = responseData.content.sha; // Yeni SHA'yı al
+                originalWorkbook = workbookToUpdate; // Lokal workbook'u güncelle
                 
                 updateSyncStatus('status-synced', `Başarıyla Kaydedildi! (${new Date().toLocaleTimeString()})`);
                 
             } catch (error) {
                 console.error("GitHub'a kaydetme hatası:", error);
-                let userErrorMessage = `Otomatik kaydetme sırasında hata oluştu: ${error.message}. Veriler eski haline getiriliyor.`;
+                let userErrorMessage = `Otomatik kaydetme sırasında hata oluştu: ${error.message}.`;
                 if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
                     userErrorMessage = "Ağ hatası: Değişiklikler kaydedilemedi. Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.";
                 }
                 window.showInfoModal(userErrorMessage, true);
                 updateSyncStatus('status-error', 'Kaydetme Başarısız!');
-                await excelVerisiYukle();
             } finally {
                 isSyncing = false;
             }
@@ -626,7 +697,7 @@
 
             tumKayitlar.forEach(kayit => {
                 if (kayit.Personeller) {
-                    const atananlar = kayit.Personeller.split(',').map(p => p.trim());
+                    const atananlar = String(kayit.Personeller).split(',').map(p => p.trim());
                     atananlar.forEach(atanan => {
                         if (isYuku.has(atanan)) {
                             isYuku.get(atanan).count++;
@@ -704,22 +775,17 @@
         };
         
         window.sil = (index) => {
-            const kayitNo = tumKayitlar[index]['Kayıt No'] || 'isimsiz';
-            window.showConfirmModal(`'${kayitNo}' numaralı kaydı silmek istediğinizden emin misiniz? Bu işlem otomatik olarak kaydedilecektir.`, index);
+            // Silme işlemi şimdilik devre dışı bırakıldı, çünkü ilçe bazlı silme karmaşık.
+            window.showInfoModal("Silme işlemi için yönetici ile görüşün.", true);
+            // const kayitNo = tumKayitlar[index]['Kayıt No'] || 'isimsiz';
+            // window.showConfirmModal(`'${kayitNo}' numaralı kaydı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`, index);
         };
 
         // --- EVENT LISTENERS ---
         refreshBtn.addEventListener('click', excelVerisiYukle);
 
         confirmOkBtn.addEventListener('click', async () => {
-            if (silinecekKayitIndex !== null) {
-                tumKayitlar.splice(silinecekKayitIndex, 1);
-                kayitListesiniGuncelle();
-                personelIsYukuGuncelle();
-                closeConfirmModal();
-                await saveDataToGithub();
-                window.showInfoModal("Kayıt başarıyla silindi ve değişiklikler GitHub'a kaydedildi.");
-            }
+             // Silme işlemi şimdilik devre dışı.
         });
         confirmCancelBtn.addEventListener('click', closeConfirmModal);
 
@@ -754,17 +820,19 @@
 
             setAddButtonState(true);
             
+            // Yeni kaydı GitHub'a gönder
+            await saveDataToGithub(yeniKayit);
+
+            // Lokal listeyi de güncelle ve arayüzü yenile
             tumKayitlar.unshift(yeniKayit);
             kayitListesiniGuncelle();
             personelIsYukuGuncelle();
             
-            await saveDataToGithub();
-
             kayitNoInput.value = '';
             document.getElementById('dosyaSayisi').value = '';
             document.getElementById('parselSayisi').value = '';
             document.getElementById('isTuru').selectedIndex = 0;
-            document.getElementById('birim').selectedIndex = 0;
+            if(currentUser.role === 'admin') document.getElementById('birim').selectedIndex = 0;
             secilenPersoneller.value = '';
             window.showInfoModal("Yeni iş eklendi ve değişiklikler GitHub'a kaydedildi.");
             
@@ -780,7 +848,7 @@
             XLSX.utils.book_append_sheet(workbook, worksheet, 'İş Listesi');
             const today = new Date();
             const dateStr = today.getFullYear() + '-' + (today.getMonth() + 1).toString().padStart(2, '0') + '-' + today.getDate().toString().padStart(2, '0');
-            XLSX.writeFile(workbook, `Kadastro_Is_Listesi_${dateStr}.xlsx`);
+            XLSX.writeFile(workbook, `Kadastro_Is_Listesi_${currentUser.ilce}_${dateStr}.xlsx`);
         });
 
         document.getElementById('personelEkleBtn').addEventListener('click', () => { const secilen = personelSec.value; if (secilen && !secilenPersoneller.value.includes(secilen)) { secilenPersoneller.value += (secilenPersoneller.value ? '\n' : '') + secilen; } });
@@ -802,8 +870,14 @@
 
         // --- UYGULAMA BAŞLANGICI ---
         const initApp = () => {
-            document.getElementById('tarih').valueAsDate = new Date();
-            excelVerisiYukle();
+            if (currentUser) {
+                loggedInUserSpan.textContent = `${currentUser.ilce} (${currentUser.role})`;
+                document.getElementById('tarih').valueAsDate = new Date();
+                excelVerisiYukle();
+            } else {
+                console.error("Kullanıcı bilgileri yüklenemedi, uygulama başlatılamıyor.");
+                window.showInfoModal("Kritik hata: Kullanıcı bilgileri bulunamadı. Lütfen sayfayı yenileyin.", true);
+            }
         };
         
         // --- SAYFA YÜKLENDİĞİNDE ÇALIŞACAK FONKSİYONLAR ---
