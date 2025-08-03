@@ -97,7 +97,8 @@
             color: #d1d5db;
             margin-bottom: 25px;
         }
-        #login-box input {
+        #login-box input[type="text"],
+        #login-box input[type="password"] {
             width: 100%;
             padding: 12px;
             margin-bottom: 15px;
@@ -126,10 +127,13 @@
         .remember-me-container {
             display: flex;
             align-items: center;
-            justify-content: center; /* Değişiklik: Ortalamak için 'center' yapıldı */
+            justify-content: flex-start; /* Değişiklik: Sola hizalamak için 'flex-start' yapıldı */
             margin-bottom: 20px;
             font-size: 14px;
             color: #e5e7eb;
+        }
+        .remember-me-container label {
+            white-space: nowrap; 
         }
         .remember-me-container input {
             width: auto;
