@@ -194,7 +194,7 @@
                 <div class="text-right flex items-center gap-4 justify-self-center md:justify-self-end">
                     <div>
                         <span id="loggedInUser" class="text-sm font-semibold block"></span>
-                        <span class="text-xs font-mono">v3.7.0</span>
+                        <span class="text-xs font-mono">v3.8.0</span>
                     </div>
                     <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-lg text-sm" title="Çıkış Yap">
                         <i class="fa-solid fa-right-from-bracket"></i>
@@ -210,7 +210,6 @@
                         <div class="sm:col-span-2"><label for="kayitNo" class="block text-sm font-medium text-gray-700">Kayıt No (MEGSİS)</label><input type="text" id="kayitNo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"></div>
                         <div><label for="tarih" class="block text-sm font-medium text-gray-700">Tarih</label><input type="date" id="tarih" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"></div>
                         <div><label for="birim" class="block text-sm font-medium text-gray-700">Birim</label><select id="birim" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"><option>Yükleniyor...</option></select></div>
-                        <div><label for="dosyaSayisi" class="block text-sm font-medium text-gray-700">Dosya Sayısı</label><input type="number" id="dosyaSayisi" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"></div>
                         <div><label for="parselSayisi" class="block text-sm font-medium text-gray-700">Parsel Sayısı</label><input type="number" id="parselSayisi" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"></div>
                         <div class="sm:col-span-2"><label for="isTuru" class="block text-sm font-medium text-gray-700">İş Türü</label><select id="isTuru" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"><option>Yükleniyor...</option></select></div>
                         <div class="sm:col-span-2">
@@ -292,7 +291,6 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Kayıt No</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Tarih</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Birim</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Dosya Sayısı</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Parsel Sayısı</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">İş</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Personeller</th>
@@ -300,7 +298,7 @@
                                 </tr>
                             </thead>
                             <tbody id="kayitListesi" class="bg-white divide-y divide-gray-200">
-                                <tr><td colspan="8" class="p-4 text-center text-gray-500">Giriş bekleniyor...</td></tr>
+                                <tr><td colspan="7" class="p-4 text-center text-gray-500">Giriş bekleniyor...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -537,7 +535,7 @@
             updateSyncStatus('status-syncing', 'Veriler Yükleniyor...');
             refreshBtn.classList.add('refresh-active');
             refreshBtn.disabled = true;
-            kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">Veri yükleniyor...</td></tr>`;
+            kayitListesi.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">Veri yükleniyor...</td></tr>`;
             
             const GITHUB_TOKEN = TOKEN_PART_1 + TOKEN_PART_2;
 
@@ -584,14 +582,12 @@
                 if (personelSheet) {
                     personelDataList = [];
                     const personelRawData = XLSX.utils.sheet_to_json(personelSheet, { header: 1 });
-                    personelSec.innerHTML = `<option value="">Personel Seçiniz</option>`;
                     personelRawData.forEach(row => {
                         if (row && row[0]) {
                             const name = String(row[0]).trim();
                             const title = row[1] ? String(row[1]).trim() : '';
                             const displayText = title ? `${name} (${title})` : name;
                             personelDataList.push({ name: name, title: title, displayText: displayText });
-                            personelSec.innerHTML += `<option value="${displayText}">${displayText}</option>`;
                         }
                     });
                 } else {
@@ -639,7 +635,7 @@
                 }
                 window.showInfoModal(userErrorMessage, true);
                 updateSyncStatus('status-error', 'Veri Yüklenemedi!');
-                kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-red-500">Veri yüklenemedi. İnternet bağlantınızı veya Token'ı kontrol edin.</td></tr>`;
+                kayitListesi.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-red-500">Veri yüklenemedi. İnternet bağlantınızı veya Token'ı kontrol edin.</td></tr>`;
                 isiAktarBtn.disabled = true;
             } finally {
                 refreshBtn.classList.remove('refresh-active');
@@ -681,15 +677,13 @@
             updateSyncStatus('status-syncing', 'Yeni kayıt ekleniyor...');
 
             try {
-                const headers = ['Kayıt No', 'Tarih', 'Birim', 'Dosya Sayısı', 'Parsel Sayısı', 'İş', 'Personeller'];
+                const headers = ['Kayıt No', 'Tarih', 'Birim', 'Parsel Sayısı', 'İş', 'Personeller'];
                 const ilceAdi = yeniKayit.Birim;
 
-                // Ana kayıtlar sayfasını güncelle
                 const kayitlarSheet = originalWorkbook.Sheets['Kayitlar'] || XLSX.utils.aoa_to_sheet([headers]);
                 XLSX.utils.sheet_add_json(kayitlarSheet, [yeniKayit], { skipHeader: true, origin: -1 });
                 originalWorkbook.Sheets['Kayitlar'] = kayitlarSheet;
 
-                // İlçe sayfasını güncelle
                 const ilceSheet = originalWorkbook.Sheets[ilceAdi] || XLSX.utils.aoa_to_sheet([headers]);
                 XLSX.utils.sheet_add_json(ilceSheet, [yeniKayit], { skipHeader: true, origin: -1 });
                 originalWorkbook.Sheets[ilceAdi] = ilceSheet;
@@ -715,9 +709,8 @@
             try {
                 const kayitNo = kayitToDelete['Kayıt No'];
                 const ilceAdi = kayitToDelete.Birim;
-                const headers = ['Kayıt No', 'Tarih', 'Birim', 'Dosya Sayısı', 'Parsel Sayısı', 'İş', 'Personeller'];
+                const headers = ['Kayıt No', 'Tarih', 'Birim', 'Parsel Sayısı', 'İş', 'Personeller'];
 
-                // Ana kayıtlar sayfasını güncelle
                 const kayitlarSheet = originalWorkbook.Sheets['Kayitlar'];
                 if (kayitlarSheet) {
                     const kayitlarData = XLSX.utils.sheet_to_json(kayitlarSheet);
@@ -725,7 +718,6 @@
                     originalWorkbook.Sheets['Kayitlar'] = XLSX.utils.json_to_sheet(updatedKayitlarData, { header: headers });
                 }
 
-                // İlçe sayfasını güncelle
                 const ilceSheet = originalWorkbook.Sheets[ilceAdi];
                 if (ilceSheet) {
                     const ilceData = XLSX.utils.sheet_to_json(ilceSheet);
@@ -749,9 +741,19 @@
         // --- UI YARDIMCI FONKSİYONLARI ---
         const personelIsYukuGuncelle = () => {
             const isYuku = new Map();
+            let allRecordsForWorkload = [];
+
+            // Admin ise tüm kayıtları, değilse sadece kendi ilçe kayıtlarını kullan
+            if (currentUser.role === 'admin') {
+                const sheet = originalWorkbook.Sheets['Kayitlar'];
+                if (sheet) allRecordsForWorkload = XLSX.utils.sheet_to_json(sheet);
+            } else {
+                allRecordsForWorkload = tumKayitlar;
+            }
+
             personelDataList.forEach(p => isYuku.set(p.displayText, { count: 0, title: p.title, name: p.name }));
 
-            tumKayitlar.forEach(kayit => {
+            allRecordsForWorkload.forEach(kayit => {
                 if (kayit.Personeller) {
                     const atananlar = String(kayit.Personeller).split(',').map(p => p.trim());
                     atananlar.forEach(atanan => {
@@ -761,6 +763,16 @@
                     });
                 }
             });
+
+            // Personel Seçim Dropdown'ını güncelle
+            personelSec.innerHTML = '<option value="">Personel Seçiniz</option>';
+            personelDataList.forEach(personel => {
+                const yuku = isYuku.get(personel.displayText);
+                const count = yuku ? yuku.count : 0;
+                const newDisplayText = `${personel.displayText} (${count})`;
+                personelSec.innerHTML += `<option value="${personel.displayText}">${newDisplayText}</option>`;
+            });
+
 
             const gruplar = {
                 muhendisler: [],
@@ -807,7 +819,7 @@
         const kayitListesiniGuncelle = () => {
             kayitListesi.innerHTML = '';
             if (tumKayitlar.length === 0) {
-                kayitListesi.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">Henüz kayıt eklenmemiş.</td></tr>`;
+                kayitListesi.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">Henüz kayıt eklenmemiş.</td></tr>`;
                 return;
             }
             let tableHtml = '';
@@ -817,7 +829,6 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${kayit['Kayıt No'] || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit.Tarih || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit.Birim || ''}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit['Dosya Sayısı'] || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit['Parsel Sayısı'] || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit.İş || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit.Personeller || ''}</td>
@@ -873,7 +884,6 @@
                 'Kayıt No': kayitNoValue,
                 'Tarih': document.getElementById('tarih').value,
                 'Birim': document.getElementById('birim').value,
-                'Dosya Sayısı': document.getElementById('dosyaSayisi').value,
                 'Parsel Sayısı': document.getElementById('parselSayisi').value,
                 'İş': document.getElementById('isTuru').value,
                 'Personeller': secilenPersoneller.value.replace(/\n/g, ', ')
@@ -893,7 +903,6 @@
             personelIsYukuGuncelle();
             
             kayitNoInput.value = '';
-            document.getElementById('dosyaSayisi').value = '';
             document.getElementById('parselSayisi').value = '';
             document.getElementById('isTuru').selectedIndex = 0;
             if(currentUser.role === 'admin') document.getElementById('birim').selectedIndex = 0;
