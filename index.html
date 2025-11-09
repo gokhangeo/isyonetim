@@ -198,7 +198,7 @@
                 <div class="text-right flex items-center gap-4 justify-self-center md:justify-self-end">
                     <div>
                         <span id="loggedInUser" class="text-sm font-semibold block"></span>
-                        <span class="text-xs font-mono">v3.12.0</span>
+                        <span class="text-xs font-mono">v3.12.1</span>
                     </div>
                     <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-lg text-sm" title="Çıkış Yap">
                         <i class="fa-solid fa-right-from-bracket"></i>
@@ -345,10 +345,10 @@
         const TOKEN_PART_1 = 'ghp_2KS6iY7t1ka6bKyHwONJ';
         const TOKEN_PART_2 = 'kXdwOUVhrU3PqlSX';
 
-        // --- KULLANICI BİLGİLERİ ---
+        // --- KULLANICI BİLGİLERİ (Merkez İlçe için personelBirimAdi eklendi) ---
         const users = {
             "mersinisyonetim": { password: "334450", role: "admin", ilce: "Tümü" },
-            "mersin": { password: "503344", role: "ilce", ilce: "Merkez İlçe" },
+            "mersin": { password: "503344", role: "ilce", ilce: "Merkez İlçe", personelBirimAdi: "Merkez" }, // DİKKAT: personelBirimAdi eklendi
             "anamur": { password: "503345", role: "ilce", ilce: "Anamur" },
             "silifke": { password: "503346", role: "ilce", ilce: "Silifke" },
             "erdemli": { password: "503347", role: "ilce", ilce: "Erdemli" },
@@ -472,7 +472,7 @@
             const user = users[username];
 
             if (user && user.password === passwordInput.value) {
-                const userData = { username, role: user.role, ilce: user.ilce };
+                const userData = { username, role: user.role, ilce: user.ilce, personelBirimAdi: user.personelBirimAdi };
                 currentUser = userData;
                 sessionStorage.setItem('loggedInUser', JSON.stringify(userData));
                 
@@ -659,28 +659,36 @@
                     }
                 }
 
-                // Personel Listesini Yükle (YENİ - FİLTRELİ)
+                // Personel Listesini Yükle (YENİ - FİLTRELİ VE CASE-INSENSITIVE)
                 const personelSheet = originalWorkbook.Sheets['Personel'];
                 if (personelSheet) {
                     personelDataList = [];
                     // Sütun başlıklarını al (A=Ad, B=Unvan, C=Birim)
                     const personelRawData = XLSX.utils.sheet_to_json(personelSheet, { header: 1 });
                     
+                    // Personel listesini filtrelemek için kullanılacak ilçe adını al
+                    // Admin değilse, önce personelBirimAdi'nı kontrol et, yoksa ilce'yi kullan
+                    // ve küçük harfe çevir
+                    const filterIlceName = (currentUser.role !== 'admin') 
+                        ? (currentUser.personelBirimAdi || currentUser.ilce).toLowerCase() 
+                        : null;
+
                     personelRawData.forEach((row, index) => {
                         if (index === 0 || !row || !row[0]) return; // Başlık satırını veya boş satırı atla
 
                         const name = String(row[0]).trim();
                         const title = row[1] ? String(row[1]).trim() : '';
-                        const personelBirim = row[2] ? String(row[2]).trim() : ''; // C sütunu
+                        const personelBirim = (row[2] ? String(row[2]).trim() : '').toLowerCase(); // C sütunu (ve küçük harfe çevir)
                         const displayText = title ? `${name} (${title})` : name;
 
-                        // Filtreleme
-                        if (currentUser.role === 'admin' || personelBirim === currentUser.ilce) {
+                        // Filtreleme (Admin ise hepsini al VEYA personel birimi kullanıcının filtresiyle eşleşiyorsa)
+                        // Karşılaştırma küçük harfle yapılıyor
+                        if (currentUser.role === 'admin' || personelBirim === filterIlceName) {
                              personelDataList.push({ 
                                 name: name, 
                                 title: title, 
                                 displayText: displayText,
-                                birim: personelBirim 
+                                birim: row[2] ? String(row[2]).trim() : '' // Orijinal birim adını sakla
                             });
                         }
                     });
