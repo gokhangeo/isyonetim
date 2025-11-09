@@ -198,7 +198,7 @@
                 <div class="text-right flex items-center gap-4 justify-self-center md:justify-self-end">
                     <div>
                         <span id="loggedInUser" class="text-sm font-semibold block"></span>
-                        <span class="text-xs font-mono">v3.12.1</span>
+                        <span class="text-xs font-mono">v3.13.0</span>
                     </div>
                     <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-lg text-sm" title="Çıkış Yap">
                         <i class="fa-solid fa-right-from-bracket"></i>
@@ -876,16 +876,46 @@
                 }
             });
 
-            // Personel Seçim Dropdown'ını güncelle
+            // Personel Seçim Dropdown'ını güncelle (YENİ SIRALAMA LOGİĞİ)
             personelSec.innerHTML = '<option value="">Personel Seçiniz</option>';
-            const sortedPersonelList = [...personelDataList].sort((a,b) => a.displayText.localeCompare(b.displayText));
+            
+            const muhendisler = [];
+            const teknisyenler = [];
 
-            sortedPersonelList.forEach(personel => {
+            // Personelleri grupla ve iş yükünü ekle
+            personelDataList.forEach(personel => {
                 const yuku = globalIsYuku.get(personel.displayText);
                 const count = yuku ? yuku.count : 0;
-                const newDisplayText = `${personel.displayText} (${count})`;
-                personelSec.innerHTML += `<option value="${personel.displayText}">${newDisplayText}</option>`;
+                const personelWithCount = { ...personel, count: count };
+
+                if (personel.title.toLowerCase().includes('mühendis')) {
+                    muhendisler.push(personelWithCount);
+                } else if (personel.title.toLowerCase().includes('teknisyen') || personel.title.toLowerCase().includes('tekniker') || personel.title.toLowerCase().includes('kontrol memuru')) {
+                    teknisyenler.push(personelWithCount);
+                }
             });
+
+            // Grupları iş sayısına göre (çoktan aza) sırala
+            muhendisler.sort((a, b) => b.count - a.count);
+            teknisyenler.sort((a, b) => b.count - a.count);
+
+            // Mühendisler grubunu ekle
+            let muhendislerHtml = '<optgroup label="Mühendisler">';
+            muhendisler.forEach(personel => {
+                const newDisplayText = `${personel.displayText} (${personel.count})`;
+                muhendislerHtml += `<option value="${personel.displayText}">${newDisplayText}</option>`;
+            });
+            muhendislerHtml += '</optgroup>';
+            personelSec.innerHTML += muhendislerHtml;
+
+            // Teknisyenler grubunu ekle
+            let teknisyenlerHtml = '<optgroup label="Tekniker / Teknisyenler">';
+            teknisyenler.forEach(personel => {
+                const newDisplayText = `${personel.displayText} (${personel.count})`;
+                teknisyenlerHtml += `<option value="${personel.displayText}">${newDisplayText}</option>`;
+            });
+            teknisyenlerHtml += '</optgroup>';
+            personelSec.innerHTML += teknisyenlerHtml;
 
 
             const gruplar = {
@@ -912,7 +942,7 @@
                 };
                 if (data.title.toLowerCase().includes('mühendis')) {
                     gruplar.muhendisler.push(personelYuku);
-                } else if (data.title.toLowerCase().includes('teknisyen') || data.title.toLowerCase().includes('tekniker')) {
+                } else if (data.title.toLowerCase().includes('teknisyen') || data.title.toLowerCase().includes('tekniker') || data.title.toLowerCase().includes('kontrol memuru')) {
                     gruplar.teknisyenler.push(personelYuku);
                 }
             });
