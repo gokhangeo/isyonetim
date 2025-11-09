@@ -198,7 +198,7 @@
                 <div class="text-right flex items-center gap-4 justify-self-center md:justify-self-end">
                     <div>
                         <span id="loggedInUser" class="text-sm font-semibold block"></span>
-                        <span class="text-xs font-mono">v3.11.0</span>
+                        <span class="text-xs font-mono">v3.12.0</span>
                     </div>
                     <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-lg text-sm" title="Çıkış Yap">
                         <i class="fa-solid fa-right-from-bracket"></i>
@@ -659,17 +659,29 @@
                     }
                 }
 
-                // Personel Listesini Yükle
+                // Personel Listesini Yükle (YENİ - FİLTRELİ)
                 const personelSheet = originalWorkbook.Sheets['Personel'];
                 if (personelSheet) {
                     personelDataList = [];
+                    // Sütun başlıklarını al (A=Ad, B=Unvan, C=Birim)
                     const personelRawData = XLSX.utils.sheet_to_json(personelSheet, { header: 1 });
-                    personelRawData.forEach(row => {
-                        if (row && row[0]) {
-                            const name = String(row[0]).trim();
-                            const title = row[1] ? String(row[1]).trim() : '';
-                            const displayText = title ? `${name} (${title})` : name;
-                            personelDataList.push({ name: name, title: title, displayText: displayText });
+                    
+                    personelRawData.forEach((row, index) => {
+                        if (index === 0 || !row || !row[0]) return; // Başlık satırını veya boş satırı atla
+
+                        const name = String(row[0]).trim();
+                        const title = row[1] ? String(row[1]).trim() : '';
+                        const personelBirim = row[2] ? String(row[2]).trim() : ''; // C sütunu
+                        const displayText = title ? `${name} (${title})` : name;
+
+                        // Filtreleme
+                        if (currentUser.role === 'admin' || personelBirim === currentUser.ilce) {
+                             personelDataList.push({ 
+                                name: name, 
+                                title: title, 
+                                displayText: displayText,
+                                birim: personelBirim 
+                            });
                         }
                     });
                 } else {
@@ -833,6 +845,7 @@
                 allRecordsForWorkload = tumKayitlar;
             }
 
+            // Görüntülenen personel listesini (filtrelenmiş) kullanarak globalIsYuku'yu başlat
             personelDataList.forEach(p => globalIsYuku.set(p.displayText, { 
                 count: 0, 
                 title: p.title, 
@@ -845,6 +858,7 @@
                 if (kayit.Personeller && isTuru) {
                     const atananlar = String(kayit.Personeller).split(',').map(p => p.trim());
                     atananlar.forEach(atanan => {
+                        // 'atanan' (örn: "Gökhan ELGÜL (Mühendis)") globalIsYuku haritasında var mı kontrol et
                         if (globalIsYuku.has(atanan)) {
                             const data = globalIsYuku.get(atanan);
                             data.count++;
@@ -871,7 +885,18 @@
                 teknisyenler: []
             };
 
+            // Sadece filtrelenmiş personelDataList (ve dolayısıyla globalIsYuku) üzerinde işlem yap
             globalIsYuku.forEach((data, displayText) => {
+                // Eğer data.count 0 ise (yani admin değilse ve başka ilçenin personeline iş atanmışsa)
+                // bu personeli accordion listesinde gösterme
+                if (data.count === 0 && currentUser.role !== 'admin') {
+                    // Sadece o ilçenin personelini göstermek için
+                    // Eğer personelDataList'te bu kişi yoksa (yani globalIsYuku'da fazladan kaldıysa) atla
+                    if (!personelDataList.find(p => p.displayText === displayText)) {
+                         return;
+                    }
+                }
+                
                 const personelYuku = { 
                     personel: data.name, 
                     isSayisi: data.count,
@@ -914,8 +939,14 @@
             
             // Kayıtları tarihe göre ters sırala (en yeni en üstte)
             const sortedKayitlar = [...tumKayitlar].sort((a, b) => {
-                const dateA = new Date(a.Tarih);
-                const dateB = new Date(b.Tarih);
+                // Tarih formatını (YYYY-MM-DD) güvenli bir şekilde Date objesine çevir
+                const dateA = a.Tarih ? new Date(a.Tarih.split('.').reverse().join('-')) : new Date(0);
+                const dateB = b.Tarih ? new Date(b.Tarih.split('.').reverse().join('-')) : new Date(0);
+                
+                // Eğer tarihler geçerli değilse sıralamada sona at
+                if (isNaN(dateA.getTime())) return 1;
+                if (isNaN(dateB.getTime())) return -1;
+
                 return dateB - dateA;
             });
 
@@ -946,6 +977,10 @@
         };
         
         window.sil = (index) => {
+            if (index < 0 || index >= tumKayitlar.length) {
+                window.showInfoModal("Silinmek istenen kayıt bulunamadı. Lütfen listeyi yenileyin.", true);
+                return;
+            }
             const kayitNo = tumKayitlar[index]['Kayıt No'] || 'isimsiz';
             window.showConfirmModal(`'${kayitNo}' numaralı kaydı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`, index);
         };
@@ -957,6 +992,13 @@
         confirmOkBtn.addEventListener('click', async () => {
             if (silinecekKayitIndex !== null) {
                 const kayitToDelete = tumKayitlar[silinecekKayitIndex];
+                if (!kayitToDelete) {
+                    window.showInfoModal("Silme hatası: Kayıt verisi bulunamadı.", true);
+                    silinecekKayitIndex = null;
+                    closeConfirmModal();
+                    return;
+                }
+                
                 closeConfirmModal();
                 
                 await deleteRecordFromGithub(kayitToDelete);
