@@ -14,6 +14,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <!-- Three.js (Animasyonlu Arka Plan için) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Chart.js (Grafikler için - İsteğe bağlı, modal için gerek kalmadı ama bırakıyorum) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --fb-blue: #002D72;
@@ -40,6 +42,8 @@
         ::-webkit-scrollbar-thumb { background: var(--fb-blue); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #0041A1; }
         .modal { transition: opacity 0.25s ease; z-index: 9999; }
+        /* Yeni modal stili */
+        .modal.personel-detay-modal { z-index: 10001; }
         .spinner { border-top-color: var(--fb-yellow); }
         .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
         .status-syncing { background-color: #f59e0b; animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
@@ -194,7 +198,7 @@
                 <div class="text-right flex items-center gap-4 justify-self-center md:justify-self-end">
                     <div>
                         <span id="loggedInUser" class="text-sm font-semibold block"></span>
-                        <span class="text-xs font-mono">v3.8.0</span>
+                        <span class="text-xs font-mono">v3.11.0</span>
                     </div>
                     <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-lg text-sm" title="Çıkış Yap">
                         <i class="fa-solid fa-right-from-bracket"></i>
@@ -228,7 +232,7 @@
                     </div>
                 </div>
 
-                <!-- Personel İş Yükü (Açılır/Kapanır) -->
+                <!-- Personel İş Yükü (Açılır/Kapanır) - GÜNCELLENDİ -->
                 <div class="my-8">
                     <h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4">Personel İş Yükü</h3>
                     <div class="space-y-2">
@@ -244,22 +248,10 @@
                                 </table>
                             </div>
                         </div>
-                        <!-- Kontrol Memurları -->
-                        <div class="border rounded-lg">
-                            <button class="accordion-toggle w-full flex justify-between items-center p-4 text-left font-semibold text-fb-blue focus:outline-none">
-                                <span>Kontrol Memurları</span>
-                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
-                            </button>
-                            <div class="accordion-content">
-                                <table class="min-w-full">
-                                    <tbody id="kontrolMemuruIsYukuListesi" class="bg-white divide-y divide-gray-200"></tbody>
-                                </table>
-                            </div>
-                        </div>
                         <!-- Teknisyenler -->
                         <div class="border rounded-lg">
                             <button class="accordion-toggle w-full flex justify-between items-center p-4 text-left font-semibold text-fb-blue focus:outline-none">
-                                <span>Teknisyenler</span>
+                                <span>Tekniker / Teknisyenler</span>
                                 <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
                             </button>
                             <div class="accordion-content">
@@ -318,6 +310,31 @@
     <div id="infoModal" class="modal pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center opacity-0"><div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="window.closeInfoModal()"></div><div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto"><div class="modal-content py-4 text-left px-6"><div class="flex justify-between items-center pb-3"><p class="text-2xl font-bold text-fb-blue">Bilgilendirme</p><div onclick="window.closeInfoModal()" class="cursor-pointer z-50"><svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18"><path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path></svg></div></div><p id="infoModalText" class="text-gray-700"></p><div class="flex justify-end pt-2"><button onclick="window.closeInfoModal()" class="px-4 bg-fb-blue p-2 rounded-lg text-white hover:bg-fb-yellow hover:text-fb-blue">Tamam</button></div></div></div></div>
     <div id="confirmModal" class="modal pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center opacity-0"><div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div><div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto"><div class="modal-content py-4 text-left px-6"><div class="flex justify-between items-center pb-3"><p class="text-2xl font-bold text-red-600">Onay Gerekiyor</p></div><p id="confirmModalText" class="text-gray-700"></p><div class="flex justify-end pt-4 gap-4"><button id="confirmCancelBtn" class="px-4 bg-gray-300 p-2 rounded-lg text-gray-800 hover:bg-gray-400">İptal</button><button id="confirmOkBtn" class="px-4 bg-red-600 p-2 rounded-lg text-white hover:bg-red-700">Evet, Sil</button></div></div></div></div>
 
+    <!-- YENİ Personel Detay Modalı (Bar Listesi) -->
+    <div id="personelDetayModal" class="modal personel-detay-modal pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center opacity-0">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="window.closePersonelDetayModal()"></div>
+        <div class="modal-container bg-white w-11/12 md:max-w-lg mx-auto rounded shadow-lg z-50 overflow-y-auto">
+            <div class="modal-content py-4 text-left px-6">
+                <div class="flex justify-between items-center pb-3">
+                    <p id="personelDetayAdi" class="text-2xl font-bold text-fb-blue">Personel Detayı</p>
+                    <div onclick="window.closePersonelDetayModal()" class="cursor-pointer z-50">
+                        <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18"><path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path></svg>
+                    </div>
+                </div>
+                
+                <!-- İş Dağılımı Bar Listesi -->
+                <div id="personelDetayList" class="my-4 p-2 max-h-64 overflow-y-auto">
+                    <!-- İçerik JavaScript ile dolacak -->
+                </div>
+
+                <div class="flex justify-end pt-2">
+                    <button onclick="window.closePersonelDetayModal()" class="px-4 bg-fb-blue p-2 rounded-lg text-white hover:bg-fb-yellow hover:text-fb-blue">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <script>
     document.addEventListener('DOMContentLoaded', () => {
 
@@ -351,11 +368,10 @@
         const statusDot = document.getElementById('statusDot');
         const statusText = document.getElementById('statusText');
         const refreshBtn = document.getElementById('refreshBtn');
-        const muhendisIsYukuListesi = document.getElementById('muhendisIsYukuListesi');
-        const kontrolMemuruIsYukuListesi = document.getElementById('kontrolMemuruIsYukuListesi');
-        const teknisyenIsYukuListesi = document.getElementById('teknisyenIsYukuListesi');
         const loggedInUserSpan = document.getElementById('loggedInUser');
         const logoutBtn = document.getElementById('logoutBtn');
+        const muhendisIsYukuListesi = document.getElementById('muhendisIsYukuListesi');
+        const teknisyenIsYukuListesi = document.getElementById('teknisyenIsYukuListesi');
 
         // --- DURUM DEĞİŞKENLERİ ---
         let tumKayitlar = [];
@@ -366,6 +382,7 @@
         let silinecekKayitIndex = null;
         let isSyncing = false;
         let currentUser = null;
+        let globalIsYuku = new Map(); // Personel iş yükünü globalde tut
 
         // --- MODAL YÖNETİMİ ---
         const infoModal = document.getElementById('infoModal');
@@ -374,6 +391,8 @@
         const confirmModalText = document.getElementById('confirmModalText');
         const confirmOkBtn = document.getElementById('confirmOkBtn');
         const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+        const personelDetayModal = document.getElementById('personelDetayModal');
+        const personelDetayAdi = document.getElementById('personelDetayAdi');
 
         window.closeInfoModal = () => infoModal.classList.add('opacity-0', 'pointer-events-none');
         window.showInfoModal = (text, isError = false) => {
@@ -387,6 +406,59 @@
             confirmModalText.textContent = text;
             confirmModal.classList.remove('opacity-0', 'pointer-events-none');
         };
+        
+        // --- Personel Detay Modal Fonksiyonları (YENİ) ---
+        window.closePersonelDetayModal = () => {
+            personelDetayModal.classList.add('opacity-0', 'pointer-events-none');
+        };
+        
+        window.showPersonelDetayModal = (displayText) => {
+            const data = globalIsYuku.get(displayText);
+            if (!data) {
+                console.error("Personel verisi bulunamadı:", displayText);
+                return;
+            }
+
+            personelDetayAdi.textContent = `${data.name} İş Dağılımı`;
+            const listContainer = document.getElementById('personelDetayList');
+            
+            // 1. Veriyi al ve sırala
+            const isTuruArray = Object.entries(data.isTuruData);
+            isTuruArray.sort((a, b) => b[1] - a[1]); // En çok olandan en aza
+
+            if (isTuruArray.length === 0) {
+                 listContainer.innerHTML = `<p class="text-gray-500 text-center">Bu personele ait iş bulunamadı.</p>`;
+                 personelDetayModal.classList.remove('opacity-0', 'pointer-events-none');
+                 return;
+            }
+            
+            // 2. Maksimum sayıyı bul (bar genişliği için)
+            const maxCount = isTuruArray[0][1]; // En büyük sayı dizinin ilk elemanıdır
+
+            // 3. HTML listesini oluştur
+            let html = '<div class="space-y-3">';
+            for (const [isTuru, count] of isTuruArray) {
+                // Bar genişliğini hesapla (en az %15 genişlik olsun ki sayı sığsın)
+                const barWidthPercent = Math.max((count / maxCount) * 100, 15);
+                
+                html += `
+                    <div class="grid grid-cols-12 gap-2 items-center">
+                        <span class="col-span-5 text-sm font-medium text-gray-800 truncate" title="${isTuru}">${isTuru}</span>
+                        <div class="col-span-7 bg-gray-200 rounded-full h-6">
+                            <div class="bg-fb-blue h-6 rounded-full flex items-center justify-end pr-2 transition-all duration-500 ease-out" style="width: ${barWidthPercent}%;">
+                                <span class="text-sm font-bold text-white">${count}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            html += '</div>';
+            listContainer.innerHTML = html;
+
+            // 4. Modalı göster
+            personelDetayModal.classList.remove('opacity-0', 'pointer-events-none');
+        };
+
 
         // --- GİRİŞ & ÇIKIŞ FONKSİYONLARI ---
         const handleLogin = () => {
@@ -560,6 +632,15 @@
                 
                 originalWorkbook = XLSX.read(bytes, { type: 'array' });
                 
+                // İş Türlerini Yükle
+                const islerSheet = originalWorkbook.Sheets['İşler'];
+                if(islerSheet){
+                    isListesi = XLSX.utils.sheet_to_json(islerSheet, { header: 1 }).flat().filter(Boolean);
+                    isTuru.innerHTML = `<option value="">İş Türü Seçiniz</option>`;
+                    isListesi.forEach(item => isTuru.innerHTML += `<option value="${item}">${item}</option>`);
+                }
+
+                // Kayıtları Yükle
                 if (currentUser.role === 'admin') {
                     const kayitlarSheet = originalWorkbook.Sheets['Kayitlar'];
                      if (!kayitlarSheet) {
@@ -578,6 +659,7 @@
                     }
                 }
 
+                // Personel Listesini Yükle
                 const personelSheet = originalWorkbook.Sheets['Personel'];
                 if (personelSheet) {
                     personelDataList = [];
@@ -594,6 +676,7 @@
                     window.showInfoModal("'Personel' adında bir Excel sayfası bulunamadı.", true);
                 }
 
+                // Birim Listesini Yükle
                 const loadSimpleSheetData = (sheetName, selectElement, list, placeholder) => {
                     const sheet = originalWorkbook.Sheets[sheetName];
                     if (sheet) {
@@ -614,14 +697,7 @@
                 };
                 
                 loadSimpleSheetData('Birim', birim, birimListesi, 'Birim Seçiniz');
-                const islerSheet = originalWorkbook.Sheets['İşler'];
-                if(islerSheet){
-                    isListesi = XLSX.utils.sheet_to_json(islerSheet, { header: 1 }).flat().filter(Boolean);
-                    isTuru.innerHTML = `<option value="">İş Türü Seçiniz</option>`;
-                    isListesi.forEach(item => isTuru.innerHTML += `<option value="${item}">${item}</option>`);
-                }
-
-
+                
                 kayitListesiniGuncelle();
                 personelIsYukuGuncelle();
                 updateSyncStatus('status-synced', `Güncel. Son Yükleme: ${new Date().toLocaleTimeString()}`);
@@ -680,13 +756,17 @@
                 const headers = ['Kayıt No', 'Tarih', 'Birim', 'Parsel Sayısı', 'İş', 'Personeller'];
                 const ilceAdi = yeniKayit.Birim;
 
+                // 1. Kayitlar sayfasına ekle
                 const kayitlarSheet = originalWorkbook.Sheets['Kayitlar'] || XLSX.utils.aoa_to_sheet([headers]);
-                XLSX.utils.sheet_add_json(kayitlarSheet, [yeniKayit], { skipHeader: true, origin: -1 });
-                originalWorkbook.Sheets['Kayitlar'] = kayitlarSheet;
+                const kayitlarData = XLSX.utils.sheet_to_json(kayitlarSheet);
+                kayitlarData.push(yeniKayit);
+                originalWorkbook.Sheets['Kayitlar'] = XLSX.utils.json_to_sheet(kayitlarData, { header: headers });
 
+                // 2. İlçe sayfasına ekle
                 const ilceSheet = originalWorkbook.Sheets[ilceAdi] || XLSX.utils.aoa_to_sheet([headers]);
-                XLSX.utils.sheet_add_json(ilceSheet, [yeniKayit], { skipHeader: true, origin: -1 });
-                originalWorkbook.Sheets[ilceAdi] = ilceSheet;
+                const ilceData = XLSX.utils.sheet_to_json(ilceSheet);
+                ilceData.push(yeniKayit);
+                originalWorkbook.Sheets[ilceAdi] = XLSX.utils.json_to_sheet(ilceData, { header: headers });
 
                 await updateGithubFile(originalWorkbook, `[Kadastro App] Yeni kayıt eklendi: ${yeniKayit['Kayıt No']}`);
                 updateSyncStatus('status-synced', 'Yeni kayıt başarıyla eklendi!');
@@ -711,6 +791,7 @@
                 const ilceAdi = kayitToDelete.Birim;
                 const headers = ['Kayıt No', 'Tarih', 'Birim', 'Parsel Sayısı', 'İş', 'Personeller'];
 
+                // 1. Kayitlar sayfasından sil
                 const kayitlarSheet = originalWorkbook.Sheets['Kayitlar'];
                 if (kayitlarSheet) {
                     const kayitlarData = XLSX.utils.sheet_to_json(kayitlarSheet);
@@ -718,6 +799,7 @@
                     originalWorkbook.Sheets['Kayitlar'] = XLSX.utils.json_to_sheet(updatedKayitlarData, { header: headers });
                 }
 
+                // 2. İlçe sayfasından sil
                 const ilceSheet = originalWorkbook.Sheets[ilceAdi];
                 if (ilceSheet) {
                     const ilceData = XLSX.utils.sheet_to_json(ilceSheet);
@@ -740,10 +822,10 @@
 
         // --- UI YARDIMCI FONKSİYONLARI ---
         const personelIsYukuGuncelle = () => {
-            const isYuku = new Map();
+            globalIsYuku.clear(); // Global haritayı temizle
             let allRecordsForWorkload = [];
 
-            // Admin ise tüm kayıtları, değilse sadece kendi ilçe kayıtlarını kullan
+            // Admin ise tüm 'Kayitlar' sayfasını, değilse sadece kendi ilçe kayıtlarını kullan
             if (currentUser.role === 'admin') {
                 const sheet = originalWorkbook.Sheets['Kayitlar'];
                 if (sheet) allRecordsForWorkload = XLSX.utils.sheet_to_json(sheet);
@@ -751,14 +833,22 @@
                 allRecordsForWorkload = tumKayitlar;
             }
 
-            personelDataList.forEach(p => isYuku.set(p.displayText, { count: 0, title: p.title, name: p.name }));
+            personelDataList.forEach(p => globalIsYuku.set(p.displayText, { 
+                count: 0, 
+                title: p.title, 
+                name: p.name,
+                isTuruData: {}
+            }));
 
             allRecordsForWorkload.forEach(kayit => {
-                if (kayit.Personeller) {
+                const isTuru = kayit.İş;
+                if (kayit.Personeller && isTuru) {
                     const atananlar = String(kayit.Personeller).split(',').map(p => p.trim());
                     atananlar.forEach(atanan => {
-                        if (isYuku.has(atanan)) {
-                            isYuku.get(atanan).count++;
+                        if (globalIsYuku.has(atanan)) {
+                            const data = globalIsYuku.get(atanan);
+                            data.count++;
+                            data.isTuruData[isTuru] = (data.isTuruData[isTuru] || 0) + 1;
                         }
                     });
                 }
@@ -766,8 +856,10 @@
 
             // Personel Seçim Dropdown'ını güncelle
             personelSec.innerHTML = '<option value="">Personel Seçiniz</option>';
-            personelDataList.forEach(personel => {
-                const yuku = isYuku.get(personel.displayText);
+            const sortedPersonelList = [...personelDataList].sort((a,b) => a.displayText.localeCompare(b.displayText));
+
+            sortedPersonelList.forEach(personel => {
+                const yuku = globalIsYuku.get(personel.displayText);
                 const count = yuku ? yuku.count : 0;
                 const newDisplayText = `${personel.displayText} (${count})`;
                 personelSec.innerHTML += `<option value="${personel.displayText}">${newDisplayText}</option>`;
@@ -776,21 +868,23 @@
 
             const gruplar = {
                 muhendisler: [],
-                kontrolMemurlari: [],
                 teknisyenler: []
             };
 
-            isYuku.forEach((data) => {
-                const personelYuku = { personel: data.name, isSayisi: data.count };
+            globalIsYuku.forEach((data, displayText) => {
+                const personelYuku = { 
+                    personel: data.name, 
+                    isSayisi: data.count,
+                    displayText: displayText // Tıklama olayı için
+                };
                 if (data.title.toLowerCase().includes('mühendis')) {
                     gruplar.muhendisler.push(personelYuku);
-                } else if (data.title.toLowerCase().includes('kontrol')) {
-                    gruplar.kontrolMemurlari.push(personelYuku);
                 } else if (data.title.toLowerCase().includes('teknisyen') || data.title.toLowerCase().includes('tekniker')) {
                     gruplar.teknisyenler.push(personelYuku);
                 }
             });
-
+            
+            // Accordion listelerini doldur
             const populateWorkloadTable = (tbody, data) => {
                 tbody.innerHTML = '';
                 data.sort((a, b) => b.isSayisi - a.isSayisi);
@@ -803,7 +897,7 @@
                 let tableHtml = '';
                 data.forEach(item => {
                     tableHtml += `
-                        <tr class="hover:bg-fb-yellow hover:bg-opacity-20">
+                        <tr class="hover:bg-fb-yellow hover:bg-opacity-20 cursor-pointer" onclick="window.showPersonelDetayModal('${item.displayText}')">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.personel}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold text-center">${item.isSayisi}</td>
                         </tr>`;
@@ -812,18 +906,28 @@
             };
 
             populateWorkloadTable(muhendisIsYukuListesi, gruplar.muhendisler);
-            populateWorkloadTable(kontrolMemuruIsYukuListesi, gruplar.kontrolMemurlari);
             populateWorkloadTable(teknisyenIsYukuListesi, gruplar.teknisyenler);
         };
 
         const kayitListesiniGuncelle = () => {
             kayitListesi.innerHTML = '';
-            if (tumKayitlar.length === 0) {
+            
+            // Kayıtları tarihe göre ters sırala (en yeni en üstte)
+            const sortedKayitlar = [...tumKayitlar].sort((a, b) => {
+                const dateA = new Date(a.Tarih);
+                const dateB = new Date(b.Tarih);
+                return dateB - dateA;
+            });
+
+            if (sortedKayitlar.length === 0) {
                 kayitListesi.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">Henüz kayıt eklenmemiş.</td></tr>`;
                 return;
             }
             let tableHtml = '';
-            tumKayitlar.forEach((kayit, index) => {
+            sortedKayitlar.forEach((kayit) => {
+                // Silme işlemi için index'i orijinal tumKayitlar listesinde bul
+                const originalIndex = tumKayitlar.findIndex(item => item['Kayıt No'] === kayit['Kayıt No']);
+
                 const row = `
                     <tr class="hover:bg-fb-yellow hover:bg-opacity-20">
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${kayit['Kayıt No'] || ''}</td>
@@ -833,7 +937,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit.İş || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit.Personeller || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button class="text-red-600 hover:text-red-900" onclick="window.sil(${index})"><i class="fa-solid fa-trash-alt"></i> Sil</button>
+                            <button class="text-red-600 hover:text-red-900" onclick="window.sil(${originalIndex})"><i class="fa-solid fa-trash-alt"></i> Sil</button>
                         </td>
                     </tr>`;
                 tableHtml += row;
@@ -875,7 +979,13 @@
                 return;
             }
             
-            if (tumKayitlar.some(kayit => String(kayit['Kayıt No']).trim() === kayitNoValue)) {
+            // Kayıt No kontrolünü tüm kayıtlar üzerinden yap (admin için)
+            let allRecords = [];
+            if (originalWorkbook && originalWorkbook.Sheets['Kayitlar']) {
+                 allRecords = XLSX.utils.sheet_to_json(originalWorkbook.Sheets['Kayitlar']);
+            }
+            
+            if (allRecords.some(kayit => String(kayit['Kayıt No']).trim() === kayitNoValue)) {
                 window.showInfoModal(`'${kayitNoValue}' numaralı kayıt zaten mevcut. Lütfen farklı bir numara girin.`, true);
                 return;
             }
@@ -884,7 +994,7 @@
                 'Kayıt No': kayitNoValue,
                 'Tarih': document.getElementById('tarih').value,
                 'Birim': document.getElementById('birim').value,
-                'Parsel Sayısı': document.getElementById('parselSayisi').value,
+                'Parsel Sayısı': document.getElementById('parselSayisi').value || 0,
                 'İş': document.getElementById('isTuru').value,
                 'Personeller': secilenPersoneller.value.replace(/\n/g, ', ')
             };
@@ -898,7 +1008,7 @@
             
             await addNewRecordToGithub(yeniKayit);
 
-            tumKayitlar.unshift(yeniKayit);
+            tumKayitlar.push(yeniKayit); // tumKayitlar'a da ekle (veya excelVerisiYukle() tekrar çağrılabilir)
             kayitListesiniGuncelle();
             personelIsYukuGuncelle();
             
@@ -960,4 +1070,3 @@
     </script>
 </body>
 </html>
-
