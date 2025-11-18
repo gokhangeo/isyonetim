@@ -198,7 +198,7 @@
                 <div class="text-right flex items-center gap-4 justify-self-center md:justify-self-end">
                     <div>
                         <span id="loggedInUser" class="text-sm font-semibold block"></span>
-                        <span class="text-xs font-mono">v3.14.0</span>
+                        <span class="text-xs font-mono">v3.15.0</span>
                     </div>
                     <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-lg text-sm" title="Çıkış Yap">
                         <i class="fa-solid fa-right-from-bracket"></i>
@@ -232,7 +232,7 @@
                     </div>
                 </div>
 
-                <!-- Personel İş Yükü (Açılır/Kapanır) - GÜNCELLENDİ -->
+                <!-- Personel İş Yükü (Açılır/Kapanır) -->
                 <div class="my-8">
                     <h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4">Personel İş Yükü</h3>
                     <div class="space-y-2">
@@ -277,16 +277,16 @@
                         </button>
                     </div>
                     <div class="overflow-x-auto max-h-[600px] overflow-y-auto bg-white rounded-lg shadow mt-4 relative">
-                        <table class="min-w-full divide-y divide-gray-200">
+                        <table class="w-full divide-y divide-gray-200 table-fixed">
                             <thead class="bg-fb-blue sticky top-0 z-10">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Kayıt No</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Tarih</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Birim</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Parsel Sayısı</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">İş</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Personeller</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">İşlem</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-white uppercase tracking-wider w-24">Kayıt No</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-white uppercase tracking-wider w-28">Tarih</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-white uppercase tracking-wider w-28">Birim</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-white uppercase tracking-wider w-20">Parsel</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-white uppercase tracking-wider w-40">İş</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Personeller</th>
+                                    <th class="px-3 py-3 text-center text-xs font-medium text-white uppercase tracking-wider w-20">İşlem</th>
                                 </tr>
                             </thead>
                             <tbody id="kayitListesi" class="bg-white divide-y divide-gray-200">
@@ -999,13 +999,13 @@
 
                 const row = `
                     <tr class="hover:bg-fb-yellow hover:bg-opacity-20">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${kayit['Kayıt No'] || ''}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit.Tarih || ''}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit.Birim || ''}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit['Parsel Sayısı'] || ''}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit.İş || ''}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kayit.Personeller || ''}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <td class="px-3 py-3 text-sm font-medium text-gray-900 truncate">${kayit['Kayıt No'] || ''}</td>
+                        <td class="px-3 py-3 text-sm text-gray-500 truncate">${kayit.Tarih || ''}</td>
+                        <td class="px-3 py-3 text-sm text-gray-500 truncate">${kayit.Birim || ''}</td>
+                        <td class="px-3 py-3 text-sm text-gray-500 truncate text-center">${kayit['Parsel Sayısı'] || ''}</td>
+                        <td class="px-3 py-3 text-sm text-gray-500 truncate" title="${kayit.İş}">${kayit.İş || ''}</td>
+                        <td class="px-3 py-3 text-sm text-gray-500 whitespace-normal break-words">${kayit.Personeller || ''}</td>
+                        <td class="px-3 py-3 text-sm font-medium text-center">
                             <button class="text-red-600 hover:text-red-900" onclick="window.sil(${originalIndex})"><i class="fa-solid fa-trash-alt"></i> Sil</button>
                         </td>
                     </tr>`;
