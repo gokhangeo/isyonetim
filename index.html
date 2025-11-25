@@ -198,7 +198,7 @@
                 <div class="text-right flex items-center gap-4 justify-self-center md:justify-self-end">
                     <div>
                         <span id="loggedInUser" class="text-sm font-semibold block"></span>
-                        <span class="text-xs font-mono">v3.15.0</span>
+                        <span class="text-xs font-mono">v3.16.0</span>
                     </div>
                     <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-lg text-sm" title="Çıkış Yap">
                         <i class="fa-solid fa-right-from-bracket"></i>
@@ -232,7 +232,7 @@
                     </div>
                 </div>
 
-                <!-- Personel İş Yükü (Açılır/Kapanır) -->
+                <!-- Personel İş Yükü (Açılır/Kapanır) - GÜNCELLENDİ -->
                 <div class="my-8">
                     <h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4">Personel İş Yükü</h3>
                     <div class="space-y-2">
@@ -257,6 +257,18 @@
                             <div class="accordion-content">
                                 <table class="min-w-full">
                                     <tbody id="teknisyenIsYukuListesi" class="bg-white divide-y divide-gray-200"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <!-- YENİ: İş Türlerine Göre Dağılım -->
+                        <div class="border rounded-lg">
+                            <button class="accordion-toggle w-full flex justify-between items-center p-4 text-left font-semibold text-fb-blue focus:outline-none">
+                                <span>İş Türlerine Göre Dağılım</span>
+                                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                            </button>
+                            <div class="accordion-content">
+                                <table class="min-w-full">
+                                    <tbody id="isTuruDagilimListesi" class="bg-white divide-y divide-gray-200"></tbody>
                                 </table>
                             </div>
                         </div>
@@ -321,12 +333,7 @@
                         <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18"><path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path></svg>
                     </div>
                 </div>
-                
-                <!-- İş Dağılımı Bar Listesi -->
-                <div id="personelDetayList" class="my-4 p-2 max-h-64 overflow-y-auto">
-                    <!-- İçerik JavaScript ile dolacak -->
-                </div>
-
+                <div id="personelDetayList" class="my-4 p-2 max-h-64 overflow-y-auto"></div>
                 <div class="flex justify-end pt-2">
                     <button onclick="window.closePersonelDetayModal()" class="px-4 bg-fb-blue p-2 rounded-lg text-white hover:bg-fb-yellow hover:text-fb-blue">Kapat</button>
                 </div>
@@ -334,6 +341,24 @@
         </div>
     </div>
 
+    <!-- YENİ İş Türü Detay Modalı -->
+    <div id="isTuruDetayModal" class="modal personel-detay-modal pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center opacity-0">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="window.closeIsTuruDetayModal()"></div>
+        <div class="modal-container bg-white w-11/12 md:max-w-lg mx-auto rounded shadow-lg z-50 overflow-y-auto">
+            <div class="modal-content py-4 text-left px-6">
+                <div class="flex justify-between items-center pb-3">
+                    <p id="isTuruDetayAdi" class="text-2xl font-bold text-fb-blue">İş Türü Detayı</p>
+                    <div onclick="window.closeIsTuruDetayModal()" class="cursor-pointer z-50">
+                        <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18"><path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path></svg>
+                    </div>
+                </div>
+                <div id="isTuruDetayList" class="my-4 p-2 max-h-64 overflow-y-auto"></div>
+                <div class="flex justify-end pt-2">
+                    <button onclick="window.closeIsTuruDetayModal()" class="px-4 bg-fb-blue p-2 rounded-lg text-white hover:bg-fb-yellow hover:text-fb-blue">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -372,6 +397,7 @@
         const logoutBtn = document.getElementById('logoutBtn');
         const muhendisIsYukuListesi = document.getElementById('muhendisIsYukuListesi');
         const teknisyenIsYukuListesi = document.getElementById('teknisyenIsYukuListesi');
+        const isTuruDagilimListesi = document.getElementById('isTuruDagilimListesi');
 
         // --- DURUM DEĞİŞKENLERİ ---
         let tumKayitlar = [];
@@ -383,6 +409,7 @@
         let isSyncing = false;
         let currentUser = null;
         let globalIsYuku = new Map(); // Personel iş yükünü globalde tut
+        let globalIsTuru = new Map(); // İş Türü yükünü globalde tut
 
         // --- MODAL YÖNETİMİ ---
         const infoModal = document.getElementById('infoModal');
@@ -393,6 +420,8 @@
         const confirmCancelBtn = document.getElementById('confirmCancelBtn');
         const personelDetayModal = document.getElementById('personelDetayModal');
         const personelDetayAdi = document.getElementById('personelDetayAdi');
+        const isTuruDetayModal = document.getElementById('isTuruDetayModal');
+        const isTuruDetayAdi = document.getElementById('isTuruDetayAdi');
 
         window.closeInfoModal = () => infoModal.classList.add('opacity-0', 'pointer-events-none');
         window.showInfoModal = (text, isError = false) => {
@@ -407,24 +436,20 @@
             confirmModal.classList.remove('opacity-0', 'pointer-events-none');
         };
         
-        // --- Personel Detay Modal Fonksiyonları (YENİ) ---
+        // --- Personel Detay Modal Fonksiyonları ---
         window.closePersonelDetayModal = () => {
             personelDetayModal.classList.add('opacity-0', 'pointer-events-none');
         };
         
         window.showPersonelDetayModal = (displayText) => {
             const data = globalIsYuku.get(displayText);
-            if (!data) {
-                console.error("Personel verisi bulunamadı:", displayText);
-                return;
-            }
+            if (!data) return;
 
             personelDetayAdi.textContent = `${data.name} İş Dağılımı`;
             const listContainer = document.getElementById('personelDetayList');
             
-            // 1. Veriyi al ve sırala
             const isTuruArray = Object.entries(data.isTuruData);
-            isTuruArray.sort((a, b) => b[1] - a[1]); // En çok olandan en aza
+            isTuruArray.sort((a, b) => b[1] - a[1]);
 
             if (isTuruArray.length === 0) {
                  listContainer.innerHTML = `<p class="text-gray-500 text-center">Bu personele ait iş bulunamadı.</p>`;
@@ -432,15 +457,11 @@
                  return;
             }
             
-            // 2. Maksimum sayıyı bul (bar genişliği için)
-            const maxCount = isTuruArray[0][1]; // En büyük sayı dizinin ilk elemanıdır
+            const maxCount = isTuruArray[0][1];
 
-            // 3. HTML listesini oluştur
             let html = '<div class="space-y-3">';
             for (const [isTuru, count] of isTuruArray) {
-                // Bar genişliğini hesapla (en az %15 genişlik olsun ki sayı sığsın)
                 const barWidthPercent = Math.max((count / maxCount) * 100, 15);
-                
                 html += `
                     <div class="grid grid-cols-12 gap-2 items-center">
                         <span class="col-span-5 text-sm font-medium text-gray-800 truncate" title="${isTuru}">${isTuru}</span>
@@ -454,9 +475,50 @@
             }
             html += '</div>';
             listContainer.innerHTML = html;
-
-            // 4. Modalı göster
             personelDetayModal.classList.remove('opacity-0', 'pointer-events-none');
+        };
+
+        // --- İş Türü Detay Modal Fonksiyonları (YENİ) ---
+        window.closeIsTuruDetayModal = () => {
+            isTuruDetayModal.classList.add('opacity-0', 'pointer-events-none');
+        };
+
+        window.showIsTuruDetayModal = (isTuruAdi) => {
+            const data = globalIsTuru.get(isTuruAdi);
+            if (!data) return;
+
+            isTuruDetayAdi.textContent = `${isTuruAdi} Detayı`;
+            const listContainer = document.getElementById('isTuruDetayList');
+
+            // Personel listesini al (Map'ten Array'e çevir ve sırala)
+            const personelArray = Array.from(data.personnel.entries());
+            personelArray.sort((a, b) => b[1] - a[1]); // İş sayısına göre çoktan aza sırala
+
+            if (personelArray.length === 0) {
+                 listContainer.innerHTML = `<p class="text-gray-500 text-center">Bu iş türüne atanmış personel bulunamadı.</p>`;
+                 isTuruDetayModal.classList.remove('opacity-0', 'pointer-events-none');
+                 return;
+            }
+            
+             const maxCount = personelArray[0][1];
+
+            let html = '<div class="space-y-3">';
+            for (const [personel, count] of personelArray) {
+                 const barWidthPercent = Math.max((count / maxCount) * 100, 15);
+                html += `
+                    <div class="grid grid-cols-12 gap-2 items-center">
+                        <span class="col-span-5 text-sm font-medium text-gray-800 truncate" title="${personel}">${personel}</span>
+                        <div class="col-span-7 bg-gray-200 rounded-full h-6">
+                            <div class="bg-fb-blue h-6 rounded-full flex items-center justify-end pr-2 transition-all duration-500 ease-out" style="width: ${barWidthPercent}%;">
+                                <span class="text-sm font-bold text-white">${count}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            html += '</div>';
+            listContainer.innerHTML = html;
+            isTuruDetayModal.classList.remove('opacity-0', 'pointer-events-none');
         };
 
 
@@ -666,9 +728,6 @@
                     // Sütun başlıklarını al (A=Ad, B=Unvan, C=Birim)
                     const personelRawData = XLSX.utils.sheet_to_json(personelSheet, { header: 1 });
                     
-                    // Personel listesini filtrelemek için kullanılacak ilçe adını al
-                    // Admin değilse, önce personelBirimAdi'nı kontrol et, yoksa ilce'yi kullan
-                    // ve küçük harfe çevir
                     const filterIlceName = (currentUser.role !== 'admin') 
                         ? (currentUser.personelBirimAdi || currentUser.ilce).toLowerCase() 
                         : null;
@@ -682,7 +741,6 @@
                         const displayText = title ? `${name} (${title})` : name;
 
                         // Filtreleme (Admin ise hepsini al VEYA personel birimi kullanıcının filtresiyle eşleşiyorsa)
-                        // Karşılaştırma küçük harfle yapılıyor
                         if (currentUser.role === 'admin' || personelBirim === filterIlceName) {
                              personelDataList.push({ 
                                 name: name, 
@@ -843,6 +901,7 @@
         // --- UI YARDIMCI FONKSİYONLARI ---
         const personelIsYukuGuncelle = () => {
             globalIsYuku.clear(); // Global haritayı temizle
+            globalIsTuru.clear(); // Global İş Türü haritasını temizle
             let allRecordsForWorkload = [];
 
             // Admin ise tüm 'Kayitlar' sayfasını, değilse sadece kendi ilçe kayıtlarını kullan
@@ -863,6 +922,14 @@
 
             allRecordsForWorkload.forEach(kayit => {
                 const isTuru = kayit.İş;
+                if(isTuru){
+                     if (!globalIsTuru.has(isTuru)) {
+                        globalIsTuru.set(isTuru, { count: 0, personnel: new Map() });
+                    }
+                    const jobData = globalIsTuru.get(isTuru);
+                    jobData.count++;
+                }
+
                 if (kayit.Personeller && isTuru) {
                     const atananlar = String(kayit.Personeller).split(',').map(p => p.trim());
                     atananlar.forEach(atanan => {
@@ -871,6 +938,14 @@
                             const data = globalIsYuku.get(atanan);
                             data.count++;
                             data.isTuruData[isTuru] = (data.isTuruData[isTuru] || 0) + 1;
+                        }
+                        
+                        // İş Türü için personel verisi topla
+                        if (globalIsTuru.has(isTuru)) {
+                             const jobData = globalIsTuru.get(isTuru);
+                             // Personelin sadece ismini al (parantez öncesi) - Gerekirse tam ismi de kullanabiliriz
+                             // const simpleName = atanan.split('(')[0].trim();
+                             jobData.personnel.set(atanan, (jobData.personnel.get(atanan) || 0) + 1);
                         }
                     });
                 }
@@ -947,7 +1022,7 @@
                 }
             });
             
-            // Accordion listelerini doldur
+            // Accordion listelerini doldur (Mühendisler ve Teknisyenler)
             const populateWorkloadTable = (tbody, data) => {
                 tbody.innerHTML = '';
                 data.sort((a, b) => b.isSayisi - a.isSayisi);
@@ -970,6 +1045,26 @@
 
             populateWorkloadTable(muhendisIsYukuListesi, gruplar.muhendisler);
             populateWorkloadTable(teknisyenIsYukuListesi, gruplar.teknisyenler);
+
+            // YENİ: İş Türü Dağılım Listesini Doldur
+            const isTuruArray = Array.from(globalIsTuru.entries());
+            isTuruArray.sort((a, b) => b[1].count - a[1].count); // Sayıya göre sırala
+
+            let isTuruHtml = '';
+             if (isTuruArray.length === 0) {
+                isTuruHtml = `<tr><td colspan="2" class="p-4 text-center text-gray-500 text-sm">Kayıtlı iş bulunamadı.</td></tr>`;
+            } else {
+                isTuruArray.forEach(([isTuruAdi, data]) => {
+                     // İş türü adını güvenli hale getir (tırnak işaretleri vs. için)
+                     const safeIsTuruAdi = isTuruAdi.replace(/'/g, "\\'");
+                    isTuruHtml += `
+                        <tr class="hover:bg-fb-yellow hover:bg-opacity-20 cursor-pointer" onclick="window.showIsTuruDetayModal('${safeIsTuruAdi}')">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${isTuruAdi}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold text-center">${data.count}</td>
+                        </tr>`;
+                });
+            }
+            isTuruDagilimListesi.innerHTML = isTuruHtml;
         };
 
         const kayitListesiniGuncelle = () => {
@@ -1150,3 +1245,4 @@
     </script>
 </body>
 </html>
+```eof
