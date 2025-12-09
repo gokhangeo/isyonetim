@@ -198,7 +198,7 @@
                 <div class="text-right flex items-center gap-4 justify-self-center md:justify-self-end">
                     <div>
                         <span id="loggedInUser" class="text-sm font-semibold block"></span>
-                        <span class="text-xs font-mono">v3.16.0</span>
+                        <span class="text-xs font-mono">v3.17.0</span>
                     </div>
                     <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-lg text-sm" title="Çıkış Yap">
                         <i class="fa-solid fa-right-from-bracket"></i>
@@ -235,6 +235,23 @@
                 <!-- Personel İş Yükü (Açılır/Kapanır) - GÜNCELLENDİ -->
                 <div class="my-8">
                     <h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4">Personel İş Yükü</h3>
+                    
+                    <!-- YENİ: Birim ve Tarih Filtreleme Alanı -->
+                    <div class="flex flex-col sm:flex-row gap-4 mb-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                        <div class="flex-1">
+                            <label for="workloadUnitFilter" class="block text-xs font-bold text-fb-blue uppercase">Birim Bazlı Filtre</label>
+                            <select id="workloadUnitFilter" class="w-full mt-1 p-2 text-sm border border-gray-300 rounded focus:ring-fb-blue focus:border-fb-blue">
+                                <option value="">TÜM BİRİMLER</option>
+                            </select>
+                        </div>
+                        <div class="flex-1">
+                            <label for="workloadMonthFilter" class="block text-xs font-bold text-fb-blue uppercase">Aylık Bazlı Filtre</label>
+                            <select id="workloadMonthFilter" class="w-full mt-1 p-2 text-sm border border-gray-300 rounded focus:ring-fb-blue focus:border-fb-blue">
+                                <option value="">TÜM ZAMANLAR</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div class="space-y-2">
                         <!-- Mühendisler -->
                         <div class="border rounded-lg">
@@ -373,7 +390,7 @@
         // --- KULLANICI BİLGİLERİ (Merkez İlçe için personelBirimAdi eklendi) ---
         const users = {
             "mersinisyonetim": { password: "334450", role: "admin", ilce: "Tümü" },
-            "mersin": { password: "503344", role: "ilce", ilce: "Merkez İlçe", personelBirimAdi: "Merkez" }, // DİKKAT: personelBirimAdi eklendi
+            "mersin": { password: "503344", role: "ilce", ilce: "Merkez İlçe", personelBirimAdi: "Merkez" },
             "anamur": { password: "503345", role: "ilce", ilce: "Anamur" },
             "silifke": { password: "503346", role: "ilce", ilce: "Silifke" },
             "erdemli": { password: "503347", role: "ilce", ilce: "Erdemli" },
@@ -398,6 +415,9 @@
         const muhendisIsYukuListesi = document.getElementById('muhendisIsYukuListesi');
         const teknisyenIsYukuListesi = document.getElementById('teknisyenIsYukuListesi');
         const isTuruDagilimListesi = document.getElementById('isTuruDagilimListesi');
+        const workloadUnitFilter = document.getElementById('workloadUnitFilter');
+        const workloadMonthFilter = document.getElementById('workloadMonthFilter');
+
 
         // --- DURUM DEĞİŞKENLERİ ---
         let tumKayitlar = [];
@@ -478,7 +498,7 @@
             personelDetayModal.classList.remove('opacity-0', 'pointer-events-none');
         };
 
-        // --- İş Türü Detay Modal Fonksiyonları (YENİ) ---
+        // --- İş Türü Detay Modal Fonksiyonları ---
         window.closeIsTuruDetayModal = () => {
             isTuruDetayModal.classList.add('opacity-0', 'pointer-events-none');
         };
@@ -490,9 +510,8 @@
             isTuruDetayAdi.textContent = `${isTuruAdi} Detayı`;
             const listContainer = document.getElementById('isTuruDetayList');
 
-            // Personel listesini al (Map'ten Array'e çevir ve sırala)
             const personelArray = Array.from(data.personnel.entries());
-            personelArray.sort((a, b) => b[1] - a[1]); // İş sayısına göre çoktan aza sırala
+            personelArray.sort((a, b) => b[1] - a[1]);
 
             if (personelArray.length === 0) {
                  listContainer.innerHTML = `<p class="text-gray-500 text-center">Bu iş türüne atanmış personel bulunamadı.</p>`;
@@ -570,10 +589,10 @@
             const userData = sessionStorage.getItem('loggedInUser');
             if (userData) {
                 currentUser = JSON.parse(userData);
-                document.getElementById('login-overlay').style.display = 'none'; // Sayfa yenilemede titremeyi önle
+                document.getElementById('login-overlay').style.display = 'none';
                 showMainApp();
             } else {
-                document.getElementById('login-overlay').style.display = 'flex'; // Giriş yapılmamışsa göster
+                document.getElementById('login-overlay').style.display = 'flex';
                 const rememberedUser = localStorage.getItem('rememberedUser');
                 if (rememberedUser) {
                     document.getElementById('username').value = rememberedUser;
@@ -721,32 +740,27 @@
                     }
                 }
 
-                // Personel Listesini Yükle (YENİ - FİLTRELİ VE CASE-INSENSITIVE)
+                // Personel Listesini Yükle (Filtreli)
                 const personelSheet = originalWorkbook.Sheets['Personel'];
                 if (personelSheet) {
                     personelDataList = [];
-                    // Sütun başlıklarını al (A=Ad, B=Unvan, C=Birim)
                     const personelRawData = XLSX.utils.sheet_to_json(personelSheet, { header: 1 });
-                    
                     const filterIlceName = (currentUser.role !== 'admin') 
                         ? (currentUser.personelBirimAdi || currentUser.ilce).toLowerCase() 
                         : null;
 
                     personelRawData.forEach((row, index) => {
-                        if (index === 0 || !row || !row[0]) return; // Başlık satırını veya boş satırı atla
-
+                        if (index === 0 || !row || !row[0]) return;
                         const name = String(row[0]).trim();
                         const title = row[1] ? String(row[1]).trim() : '';
-                        const personelBirim = (row[2] ? String(row[2]).trim() : '').toLowerCase(); // C sütunu (ve küçük harfe çevir)
+                        const personelBirim = (row[2] ? String(row[2]).trim() : '').toLowerCase();
                         const displayText = title ? `${name} (${title})` : name;
-
-                        // Filtreleme (Admin ise hepsini al VEYA personel birimi kullanıcının filtresiyle eşleşiyorsa)
                         if (currentUser.role === 'admin' || personelBirim === filterIlceName) {
                              personelDataList.push({ 
                                 name: name, 
                                 title: title, 
                                 displayText: displayText,
-                                birim: row[2] ? String(row[2]).trim() : '' // Orijinal birim adını sakla
+                                birim: row[2] ? String(row[2]).trim() : ''
                             });
                         }
                     });
@@ -761,14 +775,12 @@
                         const data = XLSX.utils.sheet_to_json(sheet, { header: 1 }).flat().filter(Boolean);
                         list.splice(0, list.length, ...data);
                         selectElement.innerHTML = `<option value="">${placeholder}</option>`;
-                        
                         if (currentUser.role === 'admin') {
                             list.forEach(item => selectElement.innerHTML += `<option value="${item}">${item}</option>`);
                         } else {
                             selectElement.innerHTML = `<option value="${currentUser.ilce}" selected>${currentUser.ilce}</option>`;
                             selectElement.disabled = true;
                         }
-
                     } else {
                         window.showInfoModal(`'${sheetName}' adında bir Excel sayfası bulunamadı.`, true);
                     }
@@ -834,13 +846,11 @@
                 const headers = ['Kayıt No', 'Tarih', 'Birim', 'Parsel Sayısı', 'İş', 'Personeller'];
                 const ilceAdi = yeniKayit.Birim;
 
-                // 1. Kayitlar sayfasına ekle
                 const kayitlarSheet = originalWorkbook.Sheets['Kayitlar'] || XLSX.utils.aoa_to_sheet([headers]);
                 const kayitlarData = XLSX.utils.sheet_to_json(kayitlarSheet);
                 kayitlarData.push(yeniKayit);
                 originalWorkbook.Sheets['Kayitlar'] = XLSX.utils.json_to_sheet(kayitlarData, { header: headers });
 
-                // 2. İlçe sayfasına ekle
                 const ilceSheet = originalWorkbook.Sheets[ilceAdi] || XLSX.utils.aoa_to_sheet([headers]);
                 const ilceData = XLSX.utils.sheet_to_json(ilceSheet);
                 ilceData.push(yeniKayit);
@@ -869,7 +879,6 @@
                 const ilceAdi = kayitToDelete.Birim;
                 const headers = ['Kayıt No', 'Tarih', 'Birim', 'Parsel Sayısı', 'İş', 'Personeller'];
 
-                // 1. Kayitlar sayfasından sil
                 const kayitlarSheet = originalWorkbook.Sheets['Kayitlar'];
                 if (kayitlarSheet) {
                     const kayitlarData = XLSX.utils.sheet_to_json(kayitlarSheet);
@@ -877,7 +886,6 @@
                     originalWorkbook.Sheets['Kayitlar'] = XLSX.utils.json_to_sheet(updatedKayitlarData, { header: headers });
                 }
 
-                // 2. İlçe sayfasından sil
                 const ilceSheet = originalWorkbook.Sheets[ilceAdi];
                 if (ilceSheet) {
                     const ilceData = XLSX.utils.sheet_to_json(ilceSheet);
@@ -898,13 +906,85 @@
             }
         };
 
-        // --- UI YARDIMCI FONKSİYONLARI ---
+        // --- İŞ YÜKÜ FİLTRE VE HESAPLAMA ---
+        const populateWorkloadFilters = () => {
+            // Birim filtresi (Sadece admin için doldurulur)
+            if (currentUser.role === 'admin') {
+                workloadUnitFilter.innerHTML = '<option value="">TÜM BİRİMLER</option>';
+                // Birim listesini kullan veya benzersiz birimleri çek
+                const uniqueUnits = [...new Set(birimListesi)].sort();
+                uniqueUnits.forEach(unit => {
+                    workloadUnitFilter.innerHTML += `<option value="${unit}">${unit}</option>`;
+                });
+                workloadUnitFilter.disabled = false;
+            } else {
+                // İlçe kullanıcısı için sadece kendi birimi
+                workloadUnitFilter.innerHTML = `<option value="${currentUser.ilce}">${currentUser.ilce}</option>`;
+                workloadUnitFilter.disabled = true;
+            }
+
+            // Ay filtresi (Kayıtların tarihlerinden dinamik oluştur)
+            let allRecords = [];
+             if (currentUser.role === 'admin') {
+                const sheet = originalWorkbook.Sheets['Kayitlar'];
+                if (sheet) allRecords = XLSX.utils.sheet_to_json(sheet);
+            } else {
+                allRecords = tumKayitlar;
+            }
+
+            const uniqueMonths = new Set();
+            allRecords.forEach(rec => {
+                if(rec.Tarih) {
+                    // Tarih formatını parse et (YYYY-MM-DD varsayıyoruz veya Excel serial)
+                    let dateObj;
+                    if (typeof rec.Tarih === 'number') {
+                         dateObj = new Date(Math.round((rec.Tarih - 25569)*86400*1000));
+                    } else {
+                        dateObj = new Date(rec.Tarih);
+                    }
+                    
+                    if (!isNaN(dateObj)) {
+                        const monthYear = dateObj.toLocaleString('tr-TR', { month: 'long', year: 'numeric' });
+                        uniqueMonths.add(monthYear);
+                    }
+                }
+            });
+
+            // Ayları sırala (Yıl ve Ay sırasına göre)
+            const sortedMonths = [...uniqueMonths].sort((a, b) => {
+                 const partsA = a.split(' ');
+                 const partsB = b.split(' ');
+                 const yearA = parseInt(partsA[1]);
+                 const yearB = parseInt(partsB[1]);
+                 // Basit ay sıralaması için
+                 const months = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+                 const monthIndexA = months.indexOf(partsA[0]);
+                 const monthIndexB = months.indexOf(partsB[0]);
+
+                 if (yearA !== yearB) return yearB - yearA; // Yıl azalan
+                 return monthIndexB - monthIndexA; // Ay azalan
+            });
+
+            workloadMonthFilter.innerHTML = '<option value="">TÜM ZAMANLAR</option>';
+            sortedMonths.forEach(m => {
+                workloadMonthFilter.innerHTML += `<option value="${m}">${m}</option>`;
+            });
+        };
+
         const personelIsYukuGuncelle = () => {
-            globalIsYuku.clear(); // Global haritayı temizle
-            globalIsTuru.clear(); // Global İş Türü haritasını temizle
+            // Filtreler henüz dolmadıysa doldur
+            if (workloadMonthFilter.options.length <= 1) {
+                populateWorkloadFilters();
+            }
+
+            const selectedUnit = workloadUnitFilter.value;
+            const selectedMonth = workloadMonthFilter.value;
+
+            globalIsYuku.clear();
+            globalIsTuru.clear();
             let allRecordsForWorkload = [];
 
-            // Admin ise tüm 'Kayitlar' sayfasını, değilse sadece kendi ilçe kayıtlarını kullan
+            // Veri Kaynağını Belirle
             if (currentUser.role === 'admin') {
                 const sheet = originalWorkbook.Sheets['Kayitlar'];
                 if (sheet) allRecordsForWorkload = XLSX.utils.sheet_to_json(sheet);
@@ -912,7 +992,7 @@
                 allRecordsForWorkload = tumKayitlar;
             }
 
-            // Görüntülenen personel listesini (filtrelenmiş) kullanarak globalIsYuku'yu başlat
+            // Görüntülenen personel listesini kullanarak globalIsYuku'yu başlat
             personelDataList.forEach(p => globalIsYuku.set(p.displayText, { 
                 count: 0, 
                 title: p.title, 
@@ -920,7 +1000,28 @@
                 isTuruData: {}
             }));
 
+            // FİLTRELEME VE SAYMA
             allRecordsForWorkload.forEach(kayit => {
+                // 1. Birim Filtresi Kontrolü
+                if (selectedUnit && kayit.Birim !== selectedUnit) return;
+
+                // 2. Ay Filtresi Kontrolü
+                if (selectedMonth && kayit.Tarih) {
+                     let dateObj;
+                    if (typeof kayit.Tarih === 'number') {
+                         dateObj = new Date(Math.round((kayit.Tarih - 25569)*86400*1000));
+                    } else {
+                        dateObj = new Date(kayit.Tarih);
+                    }
+                    if (!isNaN(dateObj)) {
+                        const monthYear = dateObj.toLocaleString('tr-TR', { month: 'long', year: 'numeric' });
+                        if (monthYear !== selectedMonth) return;
+                    } else {
+                        return; // Tarih geçersizse filtreye takılsın
+                    }
+                }
+
+                // Sayma İşlemi
                 const isTuru = kayit.İş;
                 if(isTuru){
                      if (!globalIsTuru.has(isTuru)) {
@@ -933,153 +1034,89 @@
                 if (kayit.Personeller && isTuru) {
                     const atananlar = String(kayit.Personeller).split(',').map(p => p.trim());
                     atananlar.forEach(atanan => {
-                        // 'atanan' (örn: "Gökhan ELGÜL (Mühendis)") globalIsYuku haritasında var mı kontrol et
                         if (globalIsYuku.has(atanan)) {
                             const data = globalIsYuku.get(atanan);
                             data.count++;
                             data.isTuruData[isTuru] = (data.isTuruData[isTuru] || 0) + 1;
                         }
                         
-                        // İş Türü için personel verisi topla
                         if (globalIsTuru.has(isTuru)) {
                              const jobData = globalIsTuru.get(isTuru);
-                             // Personelin sadece ismini al (parantez öncesi) - Gerekirse tam ismi de kullanabiliriz
-                             // const simpleName = atanan.split('(')[0].trim();
                              jobData.personnel.set(atanan, (jobData.personnel.get(atanan) || 0) + 1);
                         }
                     });
                 }
             });
 
-            // Personel Seçim Dropdown'ını güncelle (YENİ SIRALAMA LOGİĞİ)
+            // Dropdown Güncelleme (Sadece Admin veya Filtresiz durumda mantıklı ama yine de güncelleyelim)
             personelSec.innerHTML = '<option value="">Personel Seçiniz</option>';
-            
             const muhendisler = [];
             const teknisyenler = [];
-
-            // Personelleri grupla ve iş yükünü ekle
             personelDataList.forEach(personel => {
                 const yuku = globalIsYuku.get(personel.displayText);
                 const count = yuku ? yuku.count : 0;
                 const personelWithCount = { ...personel, count: count };
-
-                if (personel.title.toLowerCase().includes('mühendis')) {
-                    muhendisler.push(personelWithCount);
-                } else if (personel.title.toLowerCase().includes('teknisyen') || personel.title.toLowerCase().includes('tekniker') || personel.title.toLowerCase().includes('kontrol memuru')) {
-                    teknisyenler.push(personelWithCount);
-                }
+                if (personel.title.toLowerCase().includes('mühendis')) muhendisler.push(personelWithCount);
+                else if (personel.title.toLowerCase().includes('teknisyen') || personel.title.toLowerCase().includes('tekniker') || personel.title.toLowerCase().includes('kontrol memuru')) teknisyenler.push(personelWithCount);
             });
-
-            // Grupları iş sayısına göre (çoktan aza) sırala
             muhendisler.sort((a, b) => b.count - a.count);
             teknisyenler.sort((a, b) => b.count - a.count);
-
-            // Mühendisler grubunu ekle
+            
             let muhendislerHtml = '<optgroup label="Mühendisler">';
-            muhendisler.forEach(personel => {
-                const newDisplayText = `${personel.displayText} (${personel.count})`;
-                muhendislerHtml += `<option value="${personel.displayText}">${newDisplayText}</option>`;
-            });
+            muhendisler.forEach(personel => muhendislerHtml += `<option value="${personel.displayText}">${personel.displayText} (${personel.count})</option>`);
             muhendislerHtml += '</optgroup>';
             personelSec.innerHTML += muhendislerHtml;
 
-            // Teknisyenler grubunu ekle
             let teknisyenlerHtml = '<optgroup label="Tekniker / Teknisyenler">';
-            teknisyenler.forEach(personel => {
-                const newDisplayText = `${personel.displayText} (${personel.count})`;
-                teknisyenlerHtml += `<option value="${personel.displayText}">${newDisplayText}</option>`;
-            });
+            teknisyenler.forEach(personel => teknisyenlerHtml += `<option value="${personel.displayText}">${personel.displayText} (${personel.count})</option>`);
             teknisyenlerHtml += '</optgroup>';
             personelSec.innerHTML += teknisyenlerHtml;
 
 
-            const gruplar = {
-                muhendisler: [],
-                teknisyenler: []
-            };
-
-            // Sadece filtrelenmiş personelDataList (ve dolayısıyla globalIsYuku) üzerinde işlem yap
+            // Listeleri Oluşturma
+            const gruplar = { muhendisler: [], teknisyenler: [] };
             globalIsYuku.forEach((data, displayText) => {
-                // Eğer data.count 0 ise (yani admin değilse ve başka ilçenin personeline iş atanmışsa)
-                // bu personeli accordion listesinde gösterme
-                if (data.count === 0 && currentUser.role !== 'admin') {
-                    // Sadece o ilçenin personelini göstermek için
-                    // Eğer personelDataList'te bu kişi yoksa (yani globalIsYuku'da fazladan kaldıysa) atla
-                    if (!personelDataList.find(p => p.displayText === displayText)) {
-                         return;
-                    }
+                if (data.count === 0 && currentUser.role !== 'admin' && !selectedUnit && !selectedMonth) {
+                     if (!personelDataList.find(p => p.displayText === displayText)) return;
                 }
-                
-                const personelYuku = { 
-                    personel: data.name, 
-                    isSayisi: data.count,
-                    displayText: displayText // Tıklama olayı için
-                };
-                if (data.title.toLowerCase().includes('mühendis')) {
-                    gruplar.muhendisler.push(personelYuku);
-                } else if (data.title.toLowerCase().includes('teknisyen') || data.title.toLowerCase().includes('tekniker') || data.title.toLowerCase().includes('kontrol memuru')) {
-                    gruplar.teknisyenler.push(personelYuku);
-                }
+                const personelYuku = { personel: data.name, isSayisi: data.count, displayText: displayText };
+                if (data.title.toLowerCase().includes('mühendis')) gruplar.muhendisler.push(personelYuku);
+                else if (data.title.toLowerCase().includes('teknisyen') || data.title.toLowerCase().includes('tekniker') || data.title.toLowerCase().includes('kontrol memuru')) gruplar.teknisyenler.push(personelYuku);
             });
             
-            // Accordion listelerini doldur (Mühendisler ve Teknisyenler)
-            const populateWorkloadTable = (tbody, data) => {
+            const populateTable = (tbody, data) => {
                 tbody.innerHTML = '';
                 data.sort((a, b) => b.isSayisi - a.isSayisi);
-                
-                if (data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-gray-500 text-sm">Personel yok.</td></tr>`;
-                    return;
-                }
-                
-                let tableHtml = '';
+                if (data.length === 0) tbody.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-gray-500 text-sm">Veri yok.</td></tr>`;
+                let html = '';
                 data.forEach(item => {
-                    tableHtml += `
-                        <tr class="hover:bg-fb-yellow hover:bg-opacity-20 cursor-pointer" onclick="window.showPersonelDetayModal('${item.displayText}')">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.personel}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold text-center">${item.isSayisi}</td>
-                        </tr>`;
+                    html += `<tr class="hover:bg-fb-yellow hover:bg-opacity-20 cursor-pointer" onclick="window.showPersonelDetayModal('${item.displayText}')"><td class="px-6 py-4 text-sm font-medium text-gray-900">${item.personel}</td><td class="px-6 py-4 text-sm text-gray-500 font-bold text-center">${item.isSayisi}</td></tr>`;
                 });
-                tbody.innerHTML = tableHtml;
+                tbody.innerHTML = html;
             };
 
-            populateWorkloadTable(muhendisIsYukuListesi, gruplar.muhendisler);
-            populateWorkloadTable(teknisyenIsYukuListesi, gruplar.teknisyenler);
+            populateTable(muhendisIsYukuListesi, gruplar.muhendisler);
+            populateTable(teknisyenIsYukuListesi, gruplar.teknisyenler);
 
-            // YENİ: İş Türü Dağılım Listesini Doldur
             const isTuruArray = Array.from(globalIsTuru.entries());
-            isTuruArray.sort((a, b) => b[1].count - a[1].count); // Sayıya göre sırala
-
+            isTuruArray.sort((a, b) => b[1].count - a[1].count);
             let isTuruHtml = '';
-             if (isTuruArray.length === 0) {
-                isTuruHtml = `<tr><td colspan="2" class="p-4 text-center text-gray-500 text-sm">Kayıtlı iş bulunamadı.</td></tr>`;
-            } else {
-                isTuruArray.forEach(([isTuruAdi, data]) => {
-                     // İş türü adını güvenli hale getir (tırnak işaretleri vs. için)
-                     const safeIsTuruAdi = isTuruAdi.replace(/'/g, "\\'");
-                    isTuruHtml += `
-                        <tr class="hover:bg-fb-yellow hover:bg-opacity-20 cursor-pointer" onclick="window.showIsTuruDetayModal('${safeIsTuruAdi}')">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${isTuruAdi}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold text-center">${data.count}</td>
-                        </tr>`;
-                });
-            }
+             if (isTuruArray.length === 0) isTuruHtml = `<tr><td colspan="2" class="p-4 text-center text-gray-500 text-sm">Kayıtlı iş bulunamadı.</td></tr>`;
+            else isTuruArray.forEach(([name, data]) => isTuruHtml += `<tr class="hover:bg-fb-yellow hover:bg-opacity-20 cursor-pointer" onclick="window.showIsTuruDetayModal('${name.replace(/'/g, "\\'")}')"><td class="px-6 py-4 text-sm font-medium text-gray-900">${name}</td><td class="px-6 py-4 text-sm text-gray-500 font-bold text-center">${data.count}</td></tr>`);
             isTuruDagilimListesi.innerHTML = isTuruHtml;
         };
+        
+        // Filtre Event Listeners
+        workloadUnitFilter.addEventListener('change', personelIsYukuGuncelle);
+        workloadMonthFilter.addEventListener('change', personelIsYukuGuncelle);
 
         const kayitListesiniGuncelle = () => {
             kayitListesi.innerHTML = '';
-            
-            // Kayıtları tarihe göre ters sırala (en yeni en üstte)
             const sortedKayitlar = [...tumKayitlar].sort((a, b) => {
-                // Tarih formatını (YYYY-MM-DD) güvenli bir şekilde Date objesine çevir
                 const dateA = a.Tarih ? new Date(a.Tarih.split('.').reverse().join('-')) : new Date(0);
                 const dateB = b.Tarih ? new Date(b.Tarih.split('.').reverse().join('-')) : new Date(0);
-                
-                // Eğer tarihler geçerli değilse sıralamada sona at
                 if (isNaN(dateA.getTime())) return 1;
                 if (isNaN(dateB.getTime())) return -1;
-
                 return dateB - dateA;
             });
 
@@ -1089,9 +1126,7 @@
             }
             let tableHtml = '';
             sortedKayitlar.forEach((kayit) => {
-                // Silme işlemi için index'i orijinal tumKayitlar listesinde bul
                 const originalIndex = tumKayitlar.findIndex(item => item['Kayıt No'] === kayit['Kayıt No']);
-
                 const row = `
                     <tr class="hover:bg-fb-yellow hover:bg-opacity-20">
                         <td class="px-3 py-3 text-sm font-medium text-gray-900 truncate">${kayit['Kayıt No'] || ''}</td>
@@ -1245,4 +1280,3 @@
     </script>
 </body>
 </html>
-```eof
