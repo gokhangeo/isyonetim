@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <!-- Three.js (Animasyonlu Arka Plan için) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- Chart.js (Grafikler için) -->
+    <!-- Chart.js (Grafikler için - İsteğe bağlı, modal için gerek kalmadı ama bırakıyorum) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -198,7 +198,7 @@
                 <div class="text-right flex items-center gap-4 justify-self-center md:justify-self-end">
                     <div>
                         <span id="loggedInUser" class="text-sm font-semibold block"></span>
-                        <span class="text-xs font-mono">v3.26.0</span>
+                        <span class="text-xs font-mono">v3.18.0</span>
                     </div>
                     <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-lg text-sm" title="Çıkış Yap">
                         <i class="fa-solid fa-right-from-bracket"></i>
@@ -414,8 +414,8 @@
         const GITHUB_OWNER = 'gokhangeo';
         const GITHUB_REPO = 'isyonetim';
         const GITHUB_PATH = 'isyonetim.xlsx';
-        const TOKEN_PART_1 = 'ghp_jA0Y2jqexcZgdcIu6Fgl';
-        const TOKEN_PART_2 = 'COcaKo1us0070QYf';
+        const TOKEN_PART_1 = 'ghp_2KS6iY7t1ka6bKyHwONJ';
+        const TOKEN_PART_2 = 'kXdwOUVhrU3PqlSX';
 
         // --- KULLANICI BİLGİLERİ (Merkez İlçe için personelBirimAdi eklendi) ---
         const users = {
@@ -462,42 +462,6 @@
         let currentUser = null;
         let globalIsYuku = new Map(); // Personel iş yükünü globalde tut
         let globalIsTuru = new Map(); // İş Türü yükünü globalde tut
-
-        // --- YARDIMCI FONKSİYON: Akıllı Sayfa Bulucu (GELİŞTİRİLMİŞ) ---
-        const findSheetByContent = (workbook, headerName) => {
-            if (!workbook || !workbook.SheetNames) return null;
-            
-            for (const sheetName of workbook.SheetNames) {
-                const sheet = workbook.Sheets[sheetName];
-                // Sayfanın ilk birkaç satırını kontrol et (başlık satırı kaymış olabilir)
-                const data = XLSX.utils.sheet_to_json(sheet, { header: 1, range: 0, defval: '' });
-                
-                // İlk 5 satırı tara
-                for (let i = 0; i < Math.min(data.length, 5); i++) {
-                    const rowStr = JSON.stringify(data[i]).toLowerCase();
-                    if (rowStr.includes(headerName.toLowerCase())) {
-                         return sheet; // Buldum!
-                    }
-                }
-            }
-            return null;
-        };
-
-        const getSheetByName = (workbook, name) => {
-            if (!workbook || !workbook.SheetNames) return null;
-            
-            // 1. Tam Eşleşme
-            if (workbook.Sheets[name]) return workbook.Sheets[name];
-            
-            // 2. Trim ve Lowercase Eşleşmesi
-            const normalizedName = name.trim().toLocaleLowerCase('tr');
-            const foundName = workbook.SheetNames.find(n => n.trim().toLocaleLowerCase('tr') === normalizedName);
-            if (foundName) return workbook.Sheets[foundName];
-
-            // 3. İçerir Eşleşmesi (Fallback)
-            const partialMatch = workbook.SheetNames.find(n => n.trim().toLocaleLowerCase('tr').includes(normalizedName));
-            return partialMatch ? workbook.Sheets[partialMatch] : null;
-        };
 
         // --- MODAL YÖNETİMİ ---
         const infoModal = document.getElementById('infoModal');
@@ -617,11 +581,7 @@
              // 1. Veri Kaynağını Belirle
             let allRecords = [];
             if (currentUser.role === 'admin') {
-                // Fallback zinciri: İçerik ile bul -> İsimle bul -> İlk sayfayı al
-                const sheet = findSheetByContent(originalWorkbook, "Kayıt No") || 
-                              getSheetByName(originalWorkbook, 'Kayitlar') || 
-                              (originalWorkbook.SheetNames.length > 0 ? originalWorkbook.Sheets[originalWorkbook.SheetNames[0]] : null);
-                              
+                const sheet = originalWorkbook.Sheets['Kayitlar'];
                 if (sheet) allRecords = XLSX.utils.sheet_to_json(sheet);
             } else {
                 allRecords = tumKayitlar;
@@ -820,7 +780,7 @@
             addSpinner.classList.toggle('hidden', !loading);
         };
 
-        const excelVerisiYukle = async (retryCount = 0) => {
+        const excelVerisiYukle = async () => {
             updateSyncStatus('status-syncing', 'Veriler Yükleniyor...');
             refreshBtn.classList.add('refresh-active');
             refreshBtn.disabled = true;
@@ -829,87 +789,45 @@
             const GITHUB_TOKEN = TOKEN_PART_1 + TOKEN_PART_2;
 
             try {
-                // 1. Önce Dosya Bilgisini Al (SHA ve Boyut için)
                 const response = await fetch(getApiUrl(), {
                     headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
                 });
 
                 if (!response.ok) {
-                     // 401/403 ise token hatasıdır, retry yapma
-                    if (response.status === 401 || response.status === 403) {
-                         throw new Error(`Yetkilendirme Hatası: ${response.status}. Token geçersiz olabilir.`);
-                    }
-                    throw new Error(`GitHub API Hatası: ${response.status}`);
+                    const errorText = await response.text();
+                    throw new Error(`GitHub API Hatası: ${response.status} ${response.statusText}. Detay: ${errorText}`);
                 }
                 
                 const data = await response.json();
                 fileSHA = data.sha;
-                
-                let arrayBuffer;
-                
-                // 2. İçeriği Çekmeye Çalış
-                if(data.content && data.content.trim() !== "") {
-                    // Dosya küçükse content base64 olarak gelir
-                    const cleanContent = data.content.replace(/\s/g, '');
-                    const binaryString = atob(cleanContent);
-                    const bytes = new Uint8Array(binaryString.length);
-                    for (let i = 0; i < binaryString.length; i++) {
-                        bytes[i] = binaryString.charCodeAt(i);
-                    }
-                    originalWorkbook = XLSX.read(bytes, { type: 'array' });
-                } else {
-                     // Dosya büyükse BLOB API kullan
-                     console.log("Dosya büyük, Blob API kullanılıyor...");
-                     const blobUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/git/blobs/${fileSHA}`;
-                     const blobResponse = await fetch(blobUrl, {
-                        headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
-                     });
-                     
-                     if (!blobResponse.ok) {
-                         throw new Error(`Blob Verisi Çekilemedi: ${blobResponse.status}`);
-                     }
-                     
-                     const blobData = await blobResponse.json();
-                     if (!blobData.content) {
-                         throw new Error("Blob içeriği boş döndü.");
-                     }
 
-                     const binaryString = atob(blobData.content.replace(/\s/g, ''));
-                     const bytes = new Uint8Array(binaryString.length);
-                     for (let i = 0; i < binaryString.length; i++) {
-                        bytes[i] = binaryString.charCodeAt(i);
-                     }
-                     originalWorkbook = XLSX.read(bytes, { type: 'array' });
+                const binaryString = atob(data.content);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
                 }
                 
-                // --- SAYFALARI İŞLE ---
-
-                // 1. İşler Sayfası
-                const islerSheet = getSheetByName(originalWorkbook, 'İşler');
+                originalWorkbook = XLSX.read(bytes, { type: 'array' });
+                
+                // İş Türlerini Yükle
+                const islerSheet = originalWorkbook.Sheets['İşler'];
                 if(islerSheet){
                     isListesi = XLSX.utils.sheet_to_json(islerSheet, { header: 1 }).flat().filter(Boolean);
                     isTuru.innerHTML = `<option value="">İş Türü Seçiniz</option>`;
                     isListesi.forEach(item => isTuru.innerHTML += `<option value="${item}">${item}</option>`);
                 }
 
-                // 2. Kayıtlar Sayfası (Akıllı Bulucu)
-                let kayitlarSheet = findSheetByContent(originalWorkbook, "Kayıt No") || getSheetByName(originalWorkbook, 'Kayitlar');
-                
-                // Fallback: Bulunamazsa ilk sayfayı dene
-                if (!kayitlarSheet && originalWorkbook.SheetNames.length > 0) {
-                     console.warn("'Kayitlar' sayfası bulunamadı, ilk sayfa kullanılıyor:", originalWorkbook.SheetNames[0]);
-                     kayitlarSheet = originalWorkbook.Sheets[originalWorkbook.SheetNames[0]];
-                }
-
+                // Kayıtları Yükle
                 if (currentUser.role === 'admin') {
-                     if (kayitlarSheet) {
-                        tumKayitlar = XLSX.utils.sheet_to_json(kayitlarSheet);
-                    } else {
+                    const kayitlarSheet = originalWorkbook.Sheets['Kayitlar'];
+                     if (!kayitlarSheet) {
                         tumKayitlar = [];
-                        window.showInfoModal("Excel dosyasında okunabilir 'Kayıtlar' verisi bulunamadı.", true);
+                        console.warn("'Kayitlar' sayfası bulunamadı.");
+                    } else {
+                        tumKayitlar = XLSX.utils.sheet_to_json(kayitlarSheet);
                     }
                 } else {
-                    const ilceSheet = getSheetByName(originalWorkbook, currentUser.ilce);
+                    const ilceSheet = originalWorkbook.Sheets[currentUser.ilce];
                     if (!ilceSheet) {
                         tumKayitlar = [];
                         console.warn(`'${currentUser.ilce}' sayfası bulunamadı.`);
@@ -918,41 +836,21 @@
                     }
                 }
 
-                // 3. Personel Sayfası (GÜÇLENDİRİLMİŞ)
-                // Başlık satırı silinmiş olabilir, "Mühendis" veya "Tekniker" içeren satırları ara
-                const personelSheet = findSheetByContent(originalWorkbook, "Ad") || 
-                                      findSheetByContent(originalWorkbook, "Unvan") ||
-                                      findSheetByContent(originalWorkbook, "Mühendis") || // Başlık yoksa içerikten bul
-                                      getSheetByName(originalWorkbook, 'Personel');
-                
+                // Personel Listesini Yükle (Filtreli)
+                const personelSheet = originalWorkbook.Sheets['Personel'];
                 if (personelSheet) {
                     personelDataList = [];
-                    // Başlık satırı yoksa bile veriyi okuyabilmek için header: 1 kullanıyoruz
                     const personelRawData = XLSX.utils.sheet_to_json(personelSheet, { header: 1 });
                     const filterIlceName = (currentUser.role !== 'admin') 
                         ? (currentUser.personelBirimAdi || currentUser.ilce).toLowerCase() 
                         : null;
 
                     personelRawData.forEach((row, index) => {
-                        // Boş satırları atla
-                        if (!row || row.length < 2) return;
-                        
-                        // Bu satır bir başlık satırı mı? Kontrol et ve atla
-                        const rowStr = row.join(' ').toLowerCase();
-                        if (rowStr.includes("ad") && rowStr.includes("unvan")) return;
-
-                        // Veriyi al
-                        const name = row[0] ? String(row[0]).trim() : "";
-                        const title = row[1] ? String(row[1]).trim() : "";
-                        // Birim sütunu (C sütunu = index 2)
+                        if (index === 0 || !row || !row[0]) return;
+                        const name = String(row[0]).trim();
+                        const title = row[1] ? String(row[1]).trim() : '';
                         const personelBirim = (row[2] ? String(row[2]).trim() : '').toLowerCase();
-                        
-                        // İsim yoksa atla
-                        if (!name) return;
-
                         const displayText = title ? `${name} (${title})` : name;
-                        
-                        // Filtreleme
                         if (currentUser.role === 'admin' || personelBirim === filterIlceName) {
                              personelDataList.push({ 
                                 name: name, 
@@ -963,12 +861,12 @@
                         }
                     });
                 } else {
-                    console.warn("'Personel' sayfası bulunamadı.");
+                    window.showInfoModal("'Personel' adında bir Excel sayfası bulunamadı.", true);
                 }
 
-                // 4. Birim Sayfası
+                // Birim Listesini Yükle
                 const loadSimpleSheetData = (sheetName, selectElement, list, placeholder) => {
-                    const sheet = getSheetByName(originalWorkbook, sheetName);
+                    const sheet = originalWorkbook.Sheets[sheetName];
                     if (sheet) {
                         const data = XLSX.utils.sheet_to_json(sheet, { header: 1 }).flat().filter(Boolean);
                         list.splice(0, list.length, ...data);
@@ -979,37 +877,28 @@
                             selectElement.innerHTML = `<option value="${currentUser.ilce}" selected>${currentUser.ilce}</option>`;
                             selectElement.disabled = true;
                         }
+                    } else {
+                        window.showInfoModal(`'${sheetName}' adında bir Excel sayfası bulunamadı.`, true);
                     }
                 };
                 
                 loadSimpleSheetData('Birim', birim, birimListesi, 'Birim Seçiniz');
                 
-                // Arayüzü Güncelle
-                populateWorkloadFilters(); 
+                kayitListesiniGuncelle();
                 personelIsYukuGuncelle();
-                kayitListesiniGuncelle(); 
-                
                 updateSyncStatus('status-synced', `Güncel. Son Yükleme: ${new Date().toLocaleTimeString()}`);
                 isiAktarBtn.disabled = false;
 
             } catch (error) {
-                console.error('Veri yükleme hatası:', error);
-                
-                // RETRY MEKANİZMASI
-                if (retryCount < 3) {
-                     console.log(`Hata oluştu, tekrar deneniyor (${retryCount + 1}/3)...`);
-                     setTimeout(() => excelVerisiYukle(retryCount + 1), 2000); // 2 saniye bekle ve tekrar dene
-                } else {
-                    // 3 deneme başarısız olursa kullanıcıya bildir
-                    let userMsg = `Veri yüklenemedi: ${error.message}`;
-                    if (error.message.includes("Failed to fetch")) {
-                         userMsg = "İnternet bağlantısı kurulamadı veya GitHub erişimi engellendi.";
-                    }
-                    window.showInfoModal(userMsg, true);
-                    updateSyncStatus('status-error', 'Bağlantı Hatası!');
-                    kayitListesi.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-red-500">Veri alınamadı. Lütfen sayfayı yenileyin.</td></tr>`;
-                    isiAktarBtn.disabled = true;
+                console.error('Excel dosyası okunurken hata:', error);
+                let userErrorMessage = `Veri yükleme hatası: ${error.message}`;
+                if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+                    userErrorMessage = "Ağ hatası: GitHub API'sine ulaşılamadı. Lütfen internet bağlantınızı kontrol edin veya daha sonra tekrar deneyin.";
                 }
+                window.showInfoModal(userErrorMessage, true);
+                updateSyncStatus('status-error', 'Veri Yüklenemedi!');
+                kayitListesi.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-red-500">Veri yüklenemedi. İnternet bağlantınızı veya Token'ı kontrol edin.</td></tr>`;
+                isiAktarBtn.disabled = true;
             } finally {
                 refreshBtn.classList.remove('refresh-active');
                 refreshBtn.disabled = false;
@@ -1041,7 +930,7 @@
 
             const responseData = await response.json();
             fileSHA = responseData.content.sha;
-            originalWorkbook = workbook; // Güncellenmiş workbook'u hafızada tut
+            originalWorkbook = workbook;
         };
 
         const addNewRecordToGithub = async (yeniKayit) => {
@@ -1053,50 +942,15 @@
                 const headers = ['Kayıt No', 'Tarih', 'Birim', 'Parsel Sayısı', 'İş', 'Personeller'];
                 const ilceAdi = yeniKayit.Birim;
 
-                // 1. Kayitlar sayfasına ekle
-                // En garantili yöntemi kullan: İçerik bazlı veya isim bazlı bul
-                let kayitlarSheet = findSheetByContent(originalWorkbook, "Kayıt No") || getSheetByName(originalWorkbook, 'Kayitlar');
-                let mainSheetName = "";
-
-                // Eğer hala bulunamadıysa ve sheet varsa ilkini al
-                if (!kayitlarSheet && originalWorkbook.SheetNames.length > 0) {
-                     mainSheetName = originalWorkbook.SheetNames[0];
-                     kayitlarSheet = originalWorkbook.Sheets[mainSheetName];
-                } else if (kayitlarSheet) {
-                    // Sheet objesinden ismini bul (objeden isme gitmek zor olduğu için tekrar tarıyoruz)
-                    mainSheetName = originalWorkbook.SheetNames.find(n => originalWorkbook.Sheets[n] === kayitlarSheet);
-                }
-
-                // Hiçbiri yoksa yeni oluştur
-                if (!kayitlarSheet) {
-                     mainSheetName = "Kayitlar";
-                     kayitlarSheet = XLSX.utils.aoa_to_sheet([headers]);
-                     XLSX.utils.book_append_sheet(originalWorkbook, kayitlarSheet, mainSheetName);
-                }
-                
+                const kayitlarSheet = originalWorkbook.Sheets['Kayitlar'] || XLSX.utils.aoa_to_sheet([headers]);
                 const kayitlarData = XLSX.utils.sheet_to_json(kayitlarSheet);
                 kayitlarData.push(yeniKayit);
-                
-                // Mevcut sayfayı güncelle
-                const newKayitlarSheet = XLSX.utils.json_to_sheet(kayitlarData, { header: headers });
-                originalWorkbook.Sheets[mainSheetName] = newKayitlarSheet;
+                originalWorkbook.Sheets['Kayitlar'] = XLSX.utils.json_to_sheet(kayitlarData, { header: headers });
 
-                // 2. İlçe sayfasına ekle
-                let ilceSheet = getSheetByName(originalWorkbook, ilceAdi);
-                let originalSheetName = "";
-                
-                 if (!ilceSheet) { 
-                     originalSheetName = ilceAdi; // Yeni oluştur
-                     ilceSheet = XLSX.utils.aoa_to_sheet([headers]);
-                     XLSX.utils.book_append_sheet(originalWorkbook, ilceSheet, originalSheetName);
-                } else {
-                     originalSheetName = originalWorkbook.SheetNames.find(n => originalWorkbook.Sheets[n] === ilceSheet);
-                }
-
+                const ilceSheet = originalWorkbook.Sheets[ilceAdi] || XLSX.utils.aoa_to_sheet([headers]);
                 const ilceData = XLSX.utils.sheet_to_json(ilceSheet);
                 ilceData.push(yeniKayit);
-                const newIlceSheet = XLSX.utils.json_to_sheet(ilceData, { header: headers });
-                originalWorkbook.Sheets[originalSheetName] = newIlceSheet;
+                originalWorkbook.Sheets[ilceAdi] = XLSX.utils.json_to_sheet(ilceData, { header: headers });
 
                 await updateGithubFile(originalWorkbook, `[Kadastro App] Yeni kayıt eklendi: ${yeniKayit['Kayıt No']}`);
                 updateSyncStatus('status-synced', 'Yeni kayıt başarıyla eklendi!');
@@ -1121,26 +975,18 @@
                 const ilceAdi = kayitToDelete.Birim;
                 const headers = ['Kayıt No', 'Tarih', 'Birim', 'Parsel Sayısı', 'İş', 'Personeller'];
 
-                // 1. Kayitlar sayfasından sil
-                let kayitlarSheet = findSheetByContent(originalWorkbook, "Kayıt No") || getSheetByName(originalWorkbook, 'Kayitlar');
-                if (!kayitlarSheet && originalWorkbook.SheetNames.length > 0) {
-                     kayitlarSheet = originalWorkbook.Sheets[originalWorkbook.SheetNames[0]];
-                }
-
+                const kayitlarSheet = originalWorkbook.Sheets['Kayitlar'];
                 if (kayitlarSheet) {
                     const kayitlarData = XLSX.utils.sheet_to_json(kayitlarSheet);
                     const updatedKayitlarData = kayitlarData.filter(row => row['Kayıt No'] != kayitNo);
-                    const sheetName = originalWorkbook.SheetNames.find(n => originalWorkbook.Sheets[n] === kayitlarSheet) || originalWorkbook.SheetNames[0];
-                    originalWorkbook.Sheets[sheetName] = XLSX.utils.json_to_sheet(updatedKayitlarData, { header: headers });
+                    originalWorkbook.Sheets['Kayitlar'] = XLSX.utils.json_to_sheet(updatedKayitlarData, { header: headers });
                 }
 
-                // 2. İlçe sayfasından sil
-                const ilceSheet = getSheetByName(originalWorkbook, ilceAdi);
+                const ilceSheet = originalWorkbook.Sheets[ilceAdi];
                 if (ilceSheet) {
                     const ilceData = XLSX.utils.sheet_to_json(ilceSheet);
                     const updatedIlceData = ilceData.filter(row => row['Kayıt No'] != kayitNo);
-                    const sheetName = originalWorkbook.SheetNames.find(n => originalWorkbook.Sheets[n] === ilceSheet);
-                    originalWorkbook.Sheets[sheetName] = XLSX.utils.json_to_sheet(updatedIlceData, { header: headers });
+                    originalWorkbook.Sheets[ilceAdi] = XLSX.utils.json_to_sheet(updatedIlceData, { header: headers });
                 }
 
                 await updateGithubFile(originalWorkbook, `[Kadastro App] Kayıt silindi: ${kayitNo}`);
@@ -1174,8 +1020,7 @@
             // Ay ve YIL filtresi
             let allRecords = [];
              if (currentUser.role === 'admin') {
-                let sheet = findSheetByContent(originalWorkbook, "Kayıt No") || getSheetByName(originalWorkbook, 'Kayitlar');
-                if (!sheet && originalWorkbook.SheetNames.length > 0) sheet = originalWorkbook.Sheets[originalWorkbook.SheetNames[0]]; // Fallback
+                const sheet = originalWorkbook.Sheets['Kayitlar'];
                 if (sheet) allRecords = XLSX.utils.sheet_to_json(sheet);
             } else {
                 allRecords = tumKayitlar;
@@ -1207,16 +1052,15 @@
             const sortedYears = [...uniqueYears].sort((a, b) => b - a);
             
             // YIL FİLTRESİ
-            workloadYearFilter.innerHTML = '<option value="">TÜM YILLAR</option>'; // TÜM YILLAR SEÇENEĞİ EKLENDİ
+            workloadYearFilter.innerHTML = ''; // Önce temizle
             const currentYear = new Date().getFullYear();
             
-            // Eğer veri setinde henüz mevcut yıl yoksa bile listeye ekle
+            // Eğer veri setinde henüz mevcut yıl yoksa bile listeye ekle ki varsayılan olarak seçilebilsin
             if (!sortedYears.includes(currentYear)) {
                 sortedYears.unshift(currentYear);
             }
 
             sortedYears.forEach(y => {
-                // Varsayılan olarak mevcut yılı seç
                 const selected = y === currentYear ? 'selected' : '';
                 workloadYearFilter.innerHTML += `<option value="${y}" ${selected}>${y}</option>`;
             });
@@ -1246,8 +1090,7 @@
             let allRecordsForWorkload = [];
 
             if (currentUser.role === 'admin') {
-                let sheet = findSheetByContent(originalWorkbook, "Kayıt No") || getSheetByName(originalWorkbook, 'Kayitlar');
-                if (!sheet && originalWorkbook.SheetNames.length > 0) sheet = originalWorkbook.Sheets[originalWorkbook.SheetNames[0]]; // Fallback
+                const sheet = originalWorkbook.Sheets['Kayitlar'];
                 if (sheet) allRecordsForWorkload = XLSX.utils.sheet_to_json(sheet);
             } else {
                 allRecordsForWorkload = tumKayitlar;
@@ -1274,7 +1117,7 @@
                     }
                     
                     if (!isNaN(dateObj)) {
-                        // 2. Yıl Filtresi
+                        // 2. Yıl Filtresi (ZORUNLU GİBİ ÇALIŞIR - Seçili yıl dışındakileri atla)
                         if (selectedYear && dateObj.getFullYear().toString() !== selectedYear) return;
 
                         // 3. Ay Filtresi
@@ -1376,39 +1219,11 @@
         // Filtre Event Listeners
         workloadUnitFilter.addEventListener('change', personelIsYukuGuncelle);
         workloadMonthFilter.addEventListener('change', personelIsYukuGuncelle);
-        workloadYearFilter.addEventListener('change', (e) => {
-             // Yıl değişince hem iş yükünü hem de kayıt listesini güncelle
-             personelIsYukuGuncelle();
-             kayitListesiniGuncelle();
-        });
+        workloadYearFilter.addEventListener('change', personelIsYukuGuncelle); // Yıl değişince güncelle
 
         const kayitListesiniGuncelle = () => {
             kayitListesi.innerHTML = '';
-            
-            // Seçili yılı al (Varsayılan olarak mevcut yıl gelir)
-            const selectedYear = workloadYearFilter.value;
-
-            // Yıla göre filtrele
-            const filteredKayitlar = tumKayitlar.filter(kayit => {
-                 if (!kayit.Tarih) return false;
-                 let dateObj;
-                if (typeof kayit.Tarih === 'number') {
-                        dateObj = new Date(Math.round((kayit.Tarih - 25569)*86400*1000));
-                } else {
-                    dateObj = new Date(kayit.Tarih);
-                }
-                
-                if (isNaN(dateObj)) return false;
-                
-                // Eğer yıl filtresi seçiliyse ve uyuşmuyorsa, listeye dahil etme
-                if (selectedYear && dateObj.getFullYear().toString() !== selectedYear) {
-                    return false;
-                }
-                return true;
-            });
-
-            // Sırala
-            const sortedKayitlar = [...filteredKayitlar].sort((a, b) => {
+            const sortedKayitlar = [...tumKayitlar].sort((a, b) => {
                 const dateA = a.Tarih ? new Date(a.Tarih.split('.').reverse().join('-')) : new Date(0);
                 const dateB = b.Tarih ? new Date(b.Tarih.split('.').reverse().join('-')) : new Date(0);
                 if (isNaN(dateA.getTime())) return 1;
@@ -1417,15 +1232,9 @@
             });
 
             if (sortedKayitlar.length === 0) {
-                // Akıllı mesaj gösterimi (YENİLENMİŞ)
-                let emptyMessage = "Henüz kayıt eklenmemiş.";
-                if (selectedYear) {
-                    emptyMessage = `${selectedYear} yılına ait kayıt bulunamadı. Geçmiş kayıtlar için filtreyi 'TÜM YILLAR' yapabilir veya yılı değiştirebilirsiniz.`;
-                }
-                kayitListesi.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">${emptyMessage}</td></tr>`;
+                kayitListesi.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">Henüz kayıt eklenmemiş.</td></tr>`;
                 return;
             }
-
             let tableHtml = '';
             sortedKayitlar.forEach((kayit) => {
                 const originalIndex = tumKayitlar.findIndex(item => item['Kayıt No'] === kayit['Kayıt No']);
@@ -1456,7 +1265,7 @@
         };
 
         // --- EVENT LISTENERS ---
-        refreshBtn.addEventListener('click', () => excelVerisiYukle(0));
+        refreshBtn.addEventListener('click', excelVerisiYukle);
         logoutBtn.addEventListener('click', handleLogout);
 
         confirmOkBtn.addEventListener('click', async () => {
@@ -1493,15 +1302,8 @@
             
             // Kayıt No kontrolünü tüm kayıtlar üzerinden yap (admin için)
             let allRecords = [];
-             // findSheetByContent fonksiyonunu burada da kullanarak tutarlılığı sağla
-             let kayitlarSheet = findSheetByContent(originalWorkbook, "Kayıt No") || getSheetByName(originalWorkbook, 'Kayitlar');
-             // Eğer hala bulunamadıysa ve sheet varsa ilkini al
-             if (!kayitlarSheet && originalWorkbook.SheetNames.length > 0) {
-                  kayitlarSheet = originalWorkbook.Sheets[originalWorkbook.SheetNames[0]];
-             }
-
-            if (kayitlarSheet) {
-                 allRecords = XLSX.utils.sheet_to_json(kayitlarSheet);
+            if (originalWorkbook && originalWorkbook.Sheets['Kayitlar']) {
+                 allRecords = XLSX.utils.sheet_to_json(originalWorkbook.Sheets['Kayitlar']);
             }
             
             if (allRecords.some(kayit => String(kayit['Kayıt No']).trim() === kayitNoValue)) {
