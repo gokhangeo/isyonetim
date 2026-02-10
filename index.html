@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <!-- Three.js (Animasyonlu Arka Plan için) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- Chart.js (Grafikler için - İsteğe bağlı, modal için gerek kalmadı ama bırakıyorum) -->
+    <!-- Chart.js (Grafikler için) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -22,9 +22,9 @@
             --fb-yellow: #FBB03B;
         }
         body {
-            -webkit-text-size-adjust: 100%; /* iOS'ta yazı tipi boyutlandırmasını önler */
+            -webkit-text-size-adjust: 100%;
             margin: 0;
-            overflow: hidden; /* Scrollbar'ı başlangıçta gizle */
+            overflow: hidden;
         }
         .bg-fb-blue { background-color: var(--fb-blue); }
         .bg-fb-yellow { background-color: var(--fb-yellow); }
@@ -42,7 +42,6 @@
         ::-webkit-scrollbar-thumb { background: var(--fb-blue); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #0041A1; }
         .modal { transition: opacity 0.25s ease; z-index: 9999; }
-        /* Yeni modal stili */
         .modal.personel-detay-modal { z-index: 10001; }
         .spinner { border-top-color: var(--fb-yellow); }
         .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
@@ -55,122 +54,28 @@
         .refresh-active .fa-sync:not(.fa-spin) { display: none; }
         .refresh-active .fa-sync.fa-spin { display: inline-block; }
         .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; }
-
-        /* GİRİŞ EKRANI STİLLERİ */
-        #dynamic-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-        }
-        #login-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-            transition: opacity 0.5s ease-in-out;
-        }
-        #login-box {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            animation: fadeIn 0.7s ease-out forwards;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        #login-box h2 {
-            color: #ffffff;
-            font-weight: bold;
-            font-size: 1.8rem;
-            margin-bottom: 10px;
-        }
-        #login-box p {
-            color: #d1d5db;
-            margin-bottom: 25px;
-        }
-        #login-box input[type="text"],
-        #login-box input[type="password"] {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-size: 16px;
-            background-color: rgba(255, 255, 255, 0.9);
-            border: 1px solid #ccc;
-            color: #333;
-        }
-        #login-button {
-            width: 100%;
-            padding: 12px;
-            font-size: 18px;
-            border-radius: 8px;
-            cursor: pointer;
-            border: none;
-            transition: background-color 0.3s;
-        }
-        #login-error {
-            color: #fca5a5;
-            margin-bottom: 15px;
-            height: 20px;
-            font-weight: bold;
-        }
-        .remember-me-container {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            margin-bottom: 20px;
-            font-size: 14px;
-            color: #e5e7eb;
-        }
-        .remember-me-container label {
-            white-space: nowrap; 
-        }
-        .remember-me-container input {
-            width: auto;
-            margin: 0 8px 0 0;
-        }
-        .login-copyright {
-            margin-top: 20px;
-            font-size: 12px;
-            color: #9ca3af;
-        }
-        .shake {
-            animation: shake 0.5s;
-        }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
-            20%, 40%, 60%, 80% { transform: translateX(10px); }
-        }
-        #main-app-wrapper {
-             display: none; /* Başlangıçta gizli */
-             height: 100vh;
-             overflow-y: auto;
-        }
+        #dynamic-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 10000; transition: opacity 0.5s ease-in-out; }
+        #login-box { background: rgba(255, 255, 255, 0.15); padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); width: 90%; max-width: 400px; text-align: center; backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); animation: fadeIn 0.7s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        #login-box h2 { color: #ffffff; font-weight: bold; font-size: 1.8rem; margin-bottom: 10px; }
+        #login-box p { color: #d1d5db; margin-bottom: 25px; }
+        #login-box input[type="text"], #login-box input[type="password"] { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; box-sizing: border-box; font-size: 16px; background-color: rgba(255, 255, 255, 0.9); border: 1px solid #ccc; color: #333; }
+        #login-button { width: 100%; padding: 12px; font-size: 18px; border-radius: 8px; cursor: pointer; border: none; transition: background-color 0.3s; }
+        #login-error { color: #fca5a5; margin-bottom: 15px; height: 20px; font-weight: bold; }
+        .remember-me-container { display: flex; align-items: center; justify-content: flex-start; margin-bottom: 20px; font-size: 14px; color: #e5e7eb; }
+        .remember-me-container label { white-space: nowrap; }
+        .remember-me-container input { width: auto; margin: 0 8px 0 0; }
+        .login-copyright { margin-top: 20px; font-size: 12px; color: #9ca3af; }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); } 20%, 40%, 60%, 80% { transform: translateX(10px); } }
+        #main-app-wrapper { display: none; height: 100vh; overflow-y: auto; }
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
 
-    <!-- Animasyonlu Gece Gökyüzü Arka Planı -->
     <canvas id="dynamic-bg"></canvas>
 
-    <!-- Giriş Ekranı -->
     <div id="login-overlay">
         <div id="login-box">
             <h2 class="text-fb-yellow"><i class="fa-solid fa-map-location-dot mr-2"></i>Kadastro İş Yönetim Sistemi</h2>
@@ -187,18 +92,16 @@
         </div>
     </div>
 
-    <!-- Ana Uygulama Konteyneri -->
     <div id="main-app-wrapper">
         <div class="container mx-auto p-2 sm:p-4 lg:p-8">
 
-            <!-- Başlık -->
             <header class="bg-fb-blue text-white p-4 rounded-t-lg shadow-lg grid grid-cols-1 md:grid-cols-3 items-center gap-2 md:gap-4">
                 <h1 class="text-lg sm:text-2xl font-bold text-center md:text-left"><i class="fa-solid fa-map-location-dot mr-2"></i>Kadastro İş Yönetim Sistemi</h1>
                 <div class="text-center text-xs text-gray-300">© Gökhan ELGÜL tarafından tasarlanmıştır.</div>
                 <div class="text-right flex items-center gap-4 justify-self-center md:justify-self-end">
                     <div>
                         <span id="loggedInUser" class="text-sm font-semibold block"></span>
-                        <span class="text-xs font-mono">v3.18.0</span>
+                        <span class="text-xs font-mono">v3.18.2 (Büyük Dosya Modu)</span>
                     </div>
                     <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-lg text-sm" title="Çıkış Yap">
                         <i class="fa-solid fa-right-from-bracket"></i>
@@ -207,7 +110,6 @@
             </header>
 
             <main class="bg-white p-2 sm:p-6 lg:p-8 rounded-lg shadow-lg mt-4">
-                <!-- Form Alanı -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                     <div class="lg:col-span-2 bg-gray-50 p-4 rounded-lg border shadow-sm grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="sm:col-span-2"><h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4">Yeni İş Kaydı</h3></div>
@@ -232,7 +134,6 @@
                     </div>
                 </div>
 
-                <!-- Personel İş Yükü (Açılır/Kapanır) - GÜNCELLENDİ -->
                 <div class="my-8">
                     <div class="flex justify-between items-center border-b-2 border-fb-yellow pb-2 mb-4">
                         <h3 class="text-lg font-semibold text-fb-blue">Personel İş Yükü</h3>
@@ -240,8 +141,7 @@
                             <i class="fa-solid fa-calendar-days mr-1"></i>Yıllık Arşiv Özeti
                         </button>
                     </div>
-                    
-                    <!-- YENİ: Birim, Tarih ve YIL Filtreleme Alanı -->
+                     
                     <div class="flex flex-col sm:flex-row gap-4 mb-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
                         <div class="flex-1">
                             <label for="workloadUnitFilter" class="block text-xs font-bold text-fb-blue uppercase">Birim Bazlı Filtre</label>
@@ -252,7 +152,6 @@
                         <div class="flex-1">
                             <label for="workloadYearFilter" class="block text-xs font-bold text-fb-blue uppercase">Yıl</label>
                             <select id="workloadYearFilter" class="w-full mt-1 p-2 text-sm border border-gray-300 rounded focus:ring-fb-blue focus:border-fb-blue">
-                                <!-- JS ile doldurulacak -->
                             </select>
                         </div>
                         <div class="flex-1">
@@ -264,7 +163,6 @@
                     </div>
 
                     <div class="space-y-2">
-                        <!-- Mühendisler -->
                         <div class="border rounded-lg">
                             <button class="accordion-toggle w-full flex justify-between items-center p-4 text-left font-semibold text-fb-blue focus:outline-none">
                                 <span>Mühendisler</span>
@@ -276,7 +174,6 @@
                                 </table>
                             </div>
                         </div>
-                        <!-- Teknisyenler -->
                         <div class="border rounded-lg">
                             <button class="accordion-toggle w-full flex justify-between items-center p-4 text-left font-semibold text-fb-blue focus:outline-none">
                                 <span>Tekniker / Teknisyenler</span>
@@ -288,7 +185,6 @@
                                 </table>
                             </div>
                         </div>
-                        <!-- YENİ: İş Türlerine Göre Dağılım -->
                         <div class="border rounded-lg">
                             <button class="accordion-toggle w-full flex justify-between items-center p-4 text-left font-semibold text-fb-blue focus:outline-none">
                                 <span>İş Türlerine Göre Dağılım</span>
@@ -303,7 +199,6 @@
                     </div>
                 </div>
 
-                <!-- Kayıt Listesi -->
                 <div>
                     <div class="flex flex-wrap justify-between items-center gap-4">
                         <h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4 flex-grow">İş Listesi</h3>
@@ -336,7 +231,6 @@
                     </div>
                 </div>
 
-                <!-- Alt Butonlar -->
                 <footer class="mt-8 pt-6 border-t-2 border-gray-200 flex flex-wrap gap-4 justify-center">
                     <button id="excelAktarBtn" class="btn-secondary py-2 px-5 rounded-lg shadow-md"><i class="fa-solid fa-file-excel mr-2"></i>Excel'e İndir</button>
                 </footer>
@@ -345,12 +239,9 @@
         </div>
     </div>
 
-
-    <!-- Modallar -->
     <div id="infoModal" class="modal pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center opacity-0"><div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="window.closeInfoModal()"></div><div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto"><div class="modal-content py-4 text-left px-6"><div class="flex justify-between items-center pb-3"><p class="text-2xl font-bold text-fb-blue">Bilgilendirme</p><div onclick="window.closeInfoModal()" class="cursor-pointer z-50"><svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18"><path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path></svg></div></div><p id="infoModalText" class="text-gray-700"></p><div class="flex justify-end pt-2"><button onclick="window.closeInfoModal()" class="px-4 bg-fb-blue p-2 rounded-lg text-white hover:bg-fb-yellow hover:text-fb-blue">Tamam</button></div></div></div></div>
     <div id="confirmModal" class="modal pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center opacity-0"><div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div><div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto"><div class="modal-content py-4 text-left px-6"><div class="flex justify-between items-center pb-3"><p class="text-2xl font-bold text-red-600">Onay Gerekiyor</p></div><p id="confirmModalText" class="text-gray-700"></p><div class="flex justify-end pt-4 gap-4"><button id="confirmCancelBtn" class="px-4 bg-gray-300 p-2 rounded-lg text-gray-800 hover:bg-gray-400">İptal</button><button id="confirmOkBtn" class="px-4 bg-red-600 p-2 rounded-lg text-white hover:bg-red-700">Evet, Sil</button></div></div></div></div>
 
-    <!-- YENİ Personel Detay Modalı (Bar Listesi) -->
     <div id="personelDetayModal" class="modal personel-detay-modal pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center opacity-0">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="window.closePersonelDetayModal()"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-lg mx-auto rounded shadow-lg z-50 overflow-y-auto">
@@ -369,7 +260,6 @@
         </div>
     </div>
 
-    <!-- YENİ İş Türü Detay Modalı -->
     <div id="isTuruDetayModal" class="modal personel-detay-modal pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center opacity-0">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="window.closeIsTuruDetayModal()"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-lg mx-auto rounded shadow-lg z-50 overflow-y-auto">
@@ -387,8 +277,7 @@
             </div>
         </div>
     </div>
-    
-    <!-- YENİ Yıllık Arşiv Modalı -->
+     
     <div id="yillikArsivModal" class="modal personel-detay-modal pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center opacity-0">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="window.closeYillikArsivModal()"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-lg mx-auto rounded shadow-lg z-50 overflow-y-auto">
@@ -409,15 +298,12 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-
-        // --- GITHUB AYARLARI VE GÖMÜLÜ TOKEN ---
         const GITHUB_OWNER = 'gokhangeo';
         const GITHUB_REPO = 'isyonetim';
         const GITHUB_PATH = 'isyonetim.xlsx';
         const TOKEN_PART_1 = 'ghp_2KS6iY7t1ka6bKyHwONJ';
         const TOKEN_PART_2 = 'kXdwOUVhrU3PqlSX';
 
-        // --- KULLANICI BİLGİLERİ (Merkez İlçe için personelBirimAdi eklendi) ---
         const users = {
             "mersinisyonetim": { password: "334450", role: "admin", ilce: "Tümü" },
             "mersin": { password: "503344", role: "ilce", ilce: "Merkez İlçe", personelBirimAdi: "Merkez" },
@@ -428,7 +314,6 @@
             "tarsus": { password: "503349", role: "ilce", ilce: "Tarsus" }
         };
 
-        // --- DOM DEĞİŞKENLERİ ---
         const isiAktarBtn = document.getElementById('isiAktarBtn');
         const addBtnText = document.getElementById('addBtnText');
         const addSpinner = document.getElementById('addSpinner');
@@ -450,8 +335,6 @@
         const workloadYearFilter = document.getElementById('workloadYearFilter');
         const yillikArsivModal = document.getElementById('yillikArsivModal');
 
-
-        // --- DURUM DEĞİŞKENLERİ ---
         let tumKayitlar = [];
         let personelListesi = [], isListesi = [], birimListesi = [];
         let personelDataList = [];
@@ -460,10 +343,9 @@
         let silinecekKayitIndex = null;
         let isSyncing = false;
         let currentUser = null;
-        let globalIsYuku = new Map(); // Personel iş yükünü globalde tut
-        let globalIsTuru = new Map(); // İş Türü yükünü globalde tut
+        let globalIsYuku = new Map(); 
+        let globalIsTuru = new Map(); 
 
-        // --- MODAL YÖNETİMİ ---
         const infoModal = document.getElementById('infoModal');
         const infoModalText = document.getElementById('infoModalText');
         const confirmModal = document.getElementById('confirmModal');
@@ -487,19 +369,18 @@
             confirmModalText.textContent = text;
             confirmModal.classList.remove('opacity-0', 'pointer-events-none');
         };
-        
-        // --- Personel Detay Modal Fonksiyonları ---
+         
         window.closePersonelDetayModal = () => {
             personelDetayModal.classList.add('opacity-0', 'pointer-events-none');
         };
-        
+         
         window.showPersonelDetayModal = (displayText) => {
             const data = globalIsYuku.get(displayText);
             if (!data) return;
 
             personelDetayAdi.textContent = `${data.name} İş Dağılımı`;
             const listContainer = document.getElementById('personelDetayList');
-            
+             
             const isTuruArray = Object.entries(data.isTuruData);
             isTuruArray.sort((a, b) => b[1] - a[1]);
 
@@ -508,7 +389,7 @@
                  personelDetayModal.classList.remove('opacity-0', 'pointer-events-none');
                  return;
             }
-            
+             
             const maxCount = isTuruArray[0][1];
 
             let html = '<div class="space-y-3">';
@@ -530,7 +411,6 @@
             personelDetayModal.classList.remove('opacity-0', 'pointer-events-none');
         };
 
-        // --- İş Türü Detay Modal Fonksiyonları ---
         window.closeIsTuruDetayModal = () => {
             isTuruDetayModal.classList.add('opacity-0', 'pointer-events-none');
         };
@@ -550,7 +430,7 @@
                  isTuruDetayModal.classList.remove('opacity-0', 'pointer-events-none');
                  return;
             }
-            
+             
              const maxCount = personelArray[0][1];
 
             let html = '<div class="space-y-3">';
@@ -572,22 +452,19 @@
             isTuruDetayModal.classList.remove('opacity-0', 'pointer-events-none');
         };
 
-        // --- Yıllık Arşiv Modal Fonksiyonları ---
         window.closeYillikArsivModal = () => {
              yillikArsivModal.classList.add('opacity-0', 'pointer-events-none');
         }
 
         window.showYillikArsivModal = () => {
-             // 1. Veri Kaynağını Belirle
             let allRecords = [];
             if (currentUser.role === 'admin') {
-                const sheet = originalWorkbook.Sheets['Kayitlar'];
+                const sheet = originalWorkbook.Sheets[findSheetName(originalWorkbook, 'Kayitlar')];
                 if (sheet) allRecords = XLSX.utils.sheet_to_json(sheet);
             } else {
                 allRecords = tumKayitlar;
             }
 
-            // 2. Yıllara Göre Grupla
             const yearsMap = new Map();
             allRecords.forEach(rec => {
                  if(rec.Tarih) {
@@ -597,7 +474,7 @@
                     } else {
                         dateObj = new Date(rec.Tarih);
                     }
-                    
+                     
                     if (!isNaN(dateObj)) {
                         const year = dateObj.getFullYear();
                         yearsMap.set(year, (yearsMap.get(year) || 0) + 1);
@@ -605,15 +482,13 @@
                 }
             });
 
-            // 3. Sırala ve Göster
             const sortedYears = Array.from(yearsMap.entries()).sort((a,b) => b[0] - a[0]);
              const listContainer = document.getElementById('yillikArsivList');
-            
+             
              if (sortedYears.length === 0) {
                  listContainer.innerHTML = `<p class="text-gray-500 text-center">Kayıtlı veri bulunamadı.</p>`;
              } else {
                  let html = '<div class="space-y-3">';
-                 // Bar genişliği için max değeri bul
                  const maxCount = sortedYears.length > 0 ? sortedYears.reduce((max, [_, count]) => count > max ? count : max, 0) : 1;
 
                  for(const [year, count] of sortedYears) {
@@ -636,15 +511,13 @@
              yillikArsivModal.classList.remove('opacity-0', 'pointer-events-none');
         }
 
-
-        // --- GİRİŞ & ÇIKIŞ FONKSİYONLARI ---
         const handleLogin = () => {
             const usernameInput = document.getElementById('username');
             const passwordInput = document.getElementById('password');
             const loginError = document.getElementById('login-error');
             const loginBox = document.getElementById('login-box');
             const rememberMe = document.getElementById('rememberMe').checked;
-            
+             
             const username = usernameInput.value.toLowerCase().trim();
             const user = users[username];
 
@@ -652,7 +525,7 @@
                 const userData = { username, role: user.role, ilce: user.ilce, personelBirimAdi: user.personelBirimAdi };
                 currentUser = userData;
                 sessionStorage.setItem('loggedInUser', JSON.stringify(userData));
-                
+                 
                 if (rememberMe) {
                     localStorage.setItem('rememberedUser', username);
                 } else {
@@ -711,7 +584,7 @@
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             const renderer = new THREE.WebGLRenderer({ canvas: bgCanvas, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            
+             
             const generateGradient = () => {
                 const canvas = document.createElement('canvas');
                 canvas.width = 1;
@@ -724,7 +597,7 @@
                 context.fillRect(0, 0, 1, 512);
                 return canvas;
             };
-            
+             
             scene.background = new THREE.CanvasTexture(generateGradient());
 
             const particlesGeometry = new THREE.BufferGeometry();
@@ -734,18 +607,18 @@
                 posArray[i] = (Math.random() - 0.5) * 15;
             }
             particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-            
+             
             const particlesMaterial = new THREE.PointsMaterial({ size: 0.010, color: 0xffffff });
             const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
             scene.add(particlesMesh);
-            
+             
             camera.position.z = 5;
-            
+             
             let mouseX = 0, mouseY = 0;
             document.addEventListener('mousemove', (event) => { mouseX = event.clientX; mouseY = event.clientY; });
-            
+             
             const clock = new THREE.Clock();
-            
+             
             const animate = () => {
                 requestAnimationFrame(animate);
                 const elapsedTime = clock.getElapsedTime();
@@ -765,8 +638,6 @@
             });
         };
 
-
-        // --- GITHUB API & ANA FONKSİYONLAR ---
         const getApiUrl = () => `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`;
 
         const updateSyncStatus = (status, text) => {
@@ -779,13 +650,19 @@
             addBtnText.classList.toggle('hidden', loading);
             addSpinner.classList.toggle('hidden', !loading);
         };
+        
+        const findSheetName = (workbook, targetName) => {
+            if (!workbook || !workbook.SheetNames) return targetName;
+            const normalizedTarget = targetName.trim().toLowerCase();
+            return workbook.SheetNames.find(sheetName => sheetName.trim().toLowerCase() === normalizedTarget) || targetName;
+        };
 
         const excelVerisiYukle = async () => {
             updateSyncStatus('status-syncing', 'Veriler Yükleniyor...');
             refreshBtn.classList.add('refresh-active');
             refreshBtn.disabled = true;
             kayitListesi.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">Veri yükleniyor...</td></tr>`;
-            
+             
             const GITHUB_TOKEN = TOKEN_PART_1 + TOKEN_PART_2;
 
             try {
@@ -797,29 +674,44 @@
                     const errorText = await response.text();
                     throw new Error(`GitHub API Hatası: ${response.status} ${response.statusText}. Detay: ${errorText}`);
                 }
-                
+                 
                 const data = await response.json();
                 fileSHA = data.sha;
 
-                const binaryString = atob(data.content);
+                let contentBase64 = data.content;
+                if (!contentBase64 && data.sha) {
+                    const blobResponse = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/git/blobs/${data.sha}`, {
+                        headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+                    });
+                     if (blobResponse.ok) {
+                        const blobData = await blobResponse.json();
+                        contentBase64 = blobData.content;
+                    }
+                }
+
+                if (!contentBase64) {
+                     throw new Error("Dosya içeriği alınamadı. Dosya çok büyük veya erişim izni yok.");
+                }
+
+                const binaryString = atob(contentBase64.replace(/\n/g, ''));
                 const bytes = new Uint8Array(binaryString.length);
                 for (let i = 0; i < binaryString.length; i++) {
                     bytes[i] = binaryString.charCodeAt(i);
                 }
-                
+                 
                 originalWorkbook = XLSX.read(bytes, { type: 'array' });
-                
-                // İş Türlerini Yükle
-                const islerSheet = originalWorkbook.Sheets['İşler'];
+                 
+                const islerSheetName = findSheetName(originalWorkbook, 'İşler');
+                const islerSheet = originalWorkbook.Sheets[islerSheetName];
                 if(islerSheet){
                     isListesi = XLSX.utils.sheet_to_json(islerSheet, { header: 1 }).flat().filter(Boolean);
                     isTuru.innerHTML = `<option value="">İş Türü Seçiniz</option>`;
                     isListesi.forEach(item => isTuru.innerHTML += `<option value="${item}">${item}</option>`);
                 }
 
-                // Kayıtları Yükle
                 if (currentUser.role === 'admin') {
-                    const kayitlarSheet = originalWorkbook.Sheets['Kayitlar'];
+                    const kayitlarSheetName = findSheetName(originalWorkbook, 'Kayitlar');
+                    const kayitlarSheet = originalWorkbook.Sheets[kayitlarSheetName];
                      if (!kayitlarSheet) {
                         tumKayitlar = [];
                         console.warn("'Kayitlar' sayfası bulunamadı.");
@@ -827,7 +719,8 @@
                         tumKayitlar = XLSX.utils.sheet_to_json(kayitlarSheet);
                     }
                 } else {
-                    const ilceSheet = originalWorkbook.Sheets[currentUser.ilce];
+                    const ilceSheetName = findSheetName(originalWorkbook, currentUser.ilce);
+                    const ilceSheet = originalWorkbook.Sheets[ilceSheetName];
                     if (!ilceSheet) {
                         tumKayitlar = [];
                         console.warn(`'${currentUser.ilce}' sayfası bulunamadı.`);
@@ -836,8 +729,8 @@
                     }
                 }
 
-                // Personel Listesini Yükle (Filtreli)
-                const personelSheet = originalWorkbook.Sheets['Personel'];
+                const personelSheetName = findSheetName(originalWorkbook, 'Personel');
+                const personelSheet = originalWorkbook.Sheets[personelSheetName];
                 if (personelSheet) {
                     personelDataList = [];
                     const personelRawData = XLSX.utils.sheet_to_json(personelSheet, { header: 1 });
@@ -864,9 +757,10 @@
                     window.showInfoModal("'Personel' adında bir Excel sayfası bulunamadı.", true);
                 }
 
-                // Birim Listesini Yükle
-                const loadSimpleSheetData = (sheetName, selectElement, list, placeholder) => {
-                    const sheet = originalWorkbook.Sheets[sheetName];
+                const loadSimpleSheetData = (targetSheetName, selectElement, list, placeholder) => {
+                    const actualSheetName = findSheetName(originalWorkbook, targetSheetName);
+                    const sheet = originalWorkbook.Sheets[actualSheetName];
+                    
                     if (sheet) {
                         const data = XLSX.utils.sheet_to_json(sheet, { header: 1 }).flat().filter(Boolean);
                         list.splice(0, list.length, ...data);
@@ -878,12 +772,13 @@
                             selectElement.disabled = true;
                         }
                     } else {
-                        window.showInfoModal(`'${sheetName}' adında bir Excel sayfası bulunamadı.`, true);
+                        const availableSheets = originalWorkbook.SheetNames.join(', ');
+                        window.showInfoModal(`'${targetSheetName}' adında bir Excel sayfası bulunamadı. Mevcut sayfalar: ${availableSheets}`, true);
                     }
                 };
-                
+                 
                 loadSimpleSheetData('Birim', birim, birimListesi, 'Birim Seçiniz');
-                
+                 
                 kayitListesiniGuncelle();
                 personelIsYukuGuncelle();
                 updateSyncStatus('status-synced', `Güncel. Son Yükleme: ${new Date().toLocaleTimeString()}`);
@@ -904,7 +799,7 @@
                 refreshBtn.disabled = false;
             }
         };
-        
+         
         const updateGithubFile = async (workbook, message) => {
             const GITHUB_TOKEN = TOKEN_PART_1 + TOKEN_PART_2;
             const newWorkbookBinary = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
@@ -942,15 +837,17 @@
                 const headers = ['Kayıt No', 'Tarih', 'Birim', 'Parsel Sayısı', 'İş', 'Personeller'];
                 const ilceAdi = yeniKayit.Birim;
 
-                const kayitlarSheet = originalWorkbook.Sheets['Kayitlar'] || XLSX.utils.aoa_to_sheet([headers]);
+                const kayitlarSheetName = findSheetName(originalWorkbook, 'Kayitlar');
+                const kayitlarSheet = originalWorkbook.Sheets[kayitlarSheetName] || XLSX.utils.aoa_to_sheet([headers]);
                 const kayitlarData = XLSX.utils.sheet_to_json(kayitlarSheet);
                 kayitlarData.push(yeniKayit);
-                originalWorkbook.Sheets['Kayitlar'] = XLSX.utils.json_to_sheet(kayitlarData, { header: headers });
+                originalWorkbook.Sheets[kayitlarSheetName] = XLSX.utils.json_to_sheet(kayitlarData, { header: headers });
 
-                const ilceSheet = originalWorkbook.Sheets[ilceAdi] || XLSX.utils.aoa_to_sheet([headers]);
+                const ilceSheetName = findSheetName(originalWorkbook, ilceAdi);
+                const ilceSheet = originalWorkbook.Sheets[ilceSheetName] || XLSX.utils.aoa_to_sheet([headers]);
                 const ilceData = XLSX.utils.sheet_to_json(ilceSheet);
                 ilceData.push(yeniKayit);
-                originalWorkbook.Sheets[ilceAdi] = XLSX.utils.json_to_sheet(ilceData, { header: headers });
+                originalWorkbook.Sheets[ilceSheetName] = XLSX.utils.json_to_sheet(ilceData, { header: headers });
 
                 await updateGithubFile(originalWorkbook, `[Kadastro App] Yeni kayıt eklendi: ${yeniKayit['Kayıt No']}`);
                 updateSyncStatus('status-synced', 'Yeni kayıt başarıyla eklendi!');
@@ -964,29 +861,31 @@
                 isSyncing = false;
             }
         };
-        
+         
         const deleteRecordFromGithub = async (kayitToDelete) => {
             if (isSyncing) return;
             isSyncing = true;
             updateSyncStatus('status-syncing', 'Kayıt siliniyor...');
-            
+             
             try {
                 const kayitNo = kayitToDelete['Kayıt No'];
                 const ilceAdi = kayitToDelete.Birim;
                 const headers = ['Kayıt No', 'Tarih', 'Birim', 'Parsel Sayısı', 'İş', 'Personeller'];
 
-                const kayitlarSheet = originalWorkbook.Sheets['Kayitlar'];
+                const kayitlarSheetName = findSheetName(originalWorkbook, 'Kayitlar');
+                const kayitlarSheet = originalWorkbook.Sheets[kayitlarSheetName];
                 if (kayitlarSheet) {
                     const kayitlarData = XLSX.utils.sheet_to_json(kayitlarSheet);
                     const updatedKayitlarData = kayitlarData.filter(row => row['Kayıt No'] != kayitNo);
-                    originalWorkbook.Sheets['Kayitlar'] = XLSX.utils.json_to_sheet(updatedKayitlarData, { header: headers });
+                    originalWorkbook.Sheets[kayitlarSheetName] = XLSX.utils.json_to_sheet(updatedKayitlarData, { header: headers });
                 }
 
-                const ilceSheet = originalWorkbook.Sheets[ilceAdi];
+                const ilceSheetName = findSheetName(originalWorkbook, ilceAdi);
+                const ilceSheet = originalWorkbook.Sheets[ilceSheetName];
                 if (ilceSheet) {
                     const ilceData = XLSX.utils.sheet_to_json(ilceSheet);
                     const updatedIlceData = ilceData.filter(row => row['Kayıt No'] != kayitNo);
-                    originalWorkbook.Sheets[ilceAdi] = XLSX.utils.json_to_sheet(updatedIlceData, { header: headers });
+                    originalWorkbook.Sheets[ilceSheetName] = XLSX.utils.json_to_sheet(updatedIlceData, { header: headers });
                 }
 
                 await updateGithubFile(originalWorkbook, `[Kadastro App] Kayıt silindi: ${kayitNo}`);
@@ -1002,9 +901,7 @@
             }
         };
 
-        // --- İŞ YÜKÜ FİLTRE VE HESAPLAMA ---
         const populateWorkloadFilters = () => {
-            // Birim filtresi (Sadece admin için doldurulur)
             if (currentUser.role === 'admin') {
                 workloadUnitFilter.innerHTML = '<option value="">TÜM BİRİMLER</option>';
                 const uniqueUnits = [...new Set(birimListesi)].sort();
@@ -1017,10 +914,9 @@
                 workloadUnitFilter.disabled = true;
             }
 
-            // Ay ve YIL filtresi
             let allRecords = [];
              if (currentUser.role === 'admin') {
-                const sheet = originalWorkbook.Sheets['Kayitlar'];
+                const sheet = originalWorkbook.Sheets[findSheetName(originalWorkbook, 'Kayitlar')];
                 if (sheet) allRecords = XLSX.utils.sheet_to_json(sheet);
             } else {
                 allRecords = tumKayitlar;
@@ -1037,25 +933,20 @@
                     } else {
                         dateObj = new Date(rec.Tarih);
                     }
-                    
+                     
                     if (!isNaN(dateObj)) {
-                        // Ay Listesi (Sadece ay isimleri)
                         const monthName = dateObj.toLocaleString('tr-TR', { month: 'long' });
                         uniqueMonths.add(monthName);
-                        // Yıl Listesi
                         uniqueYears.add(dateObj.getFullYear());
                     }
                 }
             });
 
-            // Yılları Sırala (Azalan - Yeni yıl üstte)
             const sortedYears = [...uniqueYears].sort((a, b) => b - a);
-            
-            // YIL FİLTRESİ
-            workloadYearFilter.innerHTML = ''; // Önce temizle
+             
+            workloadYearFilter.innerHTML = ''; 
             const currentYear = new Date().getFullYear();
-            
-            // Eğer veri setinde henüz mevcut yıl yoksa bile listeye ekle ki varsayılan olarak seçilebilsin
+             
             if (!sortedYears.includes(currentYear)) {
                 sortedYears.unshift(currentYear);
             }
@@ -1066,7 +957,6 @@
             });
 
 
-            // AYLARI SIRALA
             const monthsOrder = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
             const sortedMonths = [...uniqueMonths].sort((a, b) => monthsOrder.indexOf(a) - monthsOrder.indexOf(b));
 
@@ -1083,14 +973,14 @@
 
             const selectedUnit = workloadUnitFilter.value;
             const selectedMonth = workloadMonthFilter.value;
-            const selectedYear = workloadYearFilter.value; // Yıl Seçimi
+            const selectedYear = workloadYearFilter.value; 
 
             globalIsYuku.clear();
             globalIsTuru.clear();
             let allRecordsForWorkload = [];
 
             if (currentUser.role === 'admin') {
-                const sheet = originalWorkbook.Sheets['Kayitlar'];
+                const sheet = originalWorkbook.Sheets[findSheetName(originalWorkbook, 'Kayitlar')];
                 if (sheet) allRecordsForWorkload = XLSX.utils.sheet_to_json(sheet);
             } else {
                 allRecordsForWorkload = tumKayitlar;
@@ -1103,9 +993,7 @@
                 isTuruData: {}
             }));
 
-            // FİLTRELEME VE SAYMA
             allRecordsForWorkload.forEach(kayit => {
-                // 1. Birim Filtresi
                 if (selectedUnit && kayit.Birim !== selectedUnit) return;
 
                 if (kayit.Tarih) {
@@ -1115,12 +1003,10 @@
                     } else {
                         dateObj = new Date(kayit.Tarih);
                     }
-                    
+                     
                     if (!isNaN(dateObj)) {
-                        // 2. Yıl Filtresi (ZORUNLU GİBİ ÇALIŞIR - Seçili yıl dışındakileri atla)
                         if (selectedYear && dateObj.getFullYear().toString() !== selectedYear) return;
 
-                        // 3. Ay Filtresi
                         const monthName = dateObj.toLocaleString('tr-TR', { month: 'long' });
                         if (selectedMonth && monthName !== selectedMonth) return;
 
@@ -1129,7 +1015,6 @@
                     }
                 }
 
-                // Sayma İşlemi
                 const isTuru = kayit.İş;
                 if(isTuru){
                      if (!globalIsTuru.has(isTuru)) {
@@ -1147,7 +1032,7 @@
                             data.count++;
                             data.isTuruData[isTuru] = (data.isTuruData[isTuru] || 0) + 1;
                         }
-                        
+                         
                         if (globalIsTuru.has(isTuru)) {
                              const jobData = globalIsTuru.get(isTuru);
                              jobData.personnel.set(atanan, (jobData.personnel.get(atanan) || 0) + 1);
@@ -1156,7 +1041,6 @@
                 }
             });
 
-            // Dropdown Güncelleme 
             personelSec.innerHTML = '<option value="">Personel Seçiniz</option>';
             const muhendisler = [];
             const teknisyenler = [];
@@ -1169,7 +1053,7 @@
             });
             muhendisler.sort((a, b) => b.count - a.count);
             teknisyenler.sort((a, b) => b.count - a.count);
-            
+             
             let muhendislerHtml = '<optgroup label="Mühendisler">';
             muhendisler.forEach(personel => muhendislerHtml += `<option value="${personel.displayText}">${personel.displayText} (${personel.count})</option>`);
             muhendislerHtml += '</optgroup>';
@@ -1181,11 +1065,8 @@
             personelSec.innerHTML += teknisyenlerHtml;
 
 
-            // Listeleri Oluşturma
             const gruplar = { muhendisler: [], teknisyenler: [] };
             globalIsYuku.forEach((data, displayText) => {
-                // Sadece seçili birimdeki personeli göster (eğer admin değilse)
-                // Admin ise, 0 işi olsa bile eğer birim filtresi seçilmediyse herkesi göster, seçildiyse o birimi göster
                 if (data.count === 0 && currentUser.role !== 'admin' && !selectedUnit) {
                      if (!personelDataList.find(p => p.displayText === displayText)) return;
                 }
@@ -1193,7 +1074,7 @@
                 if (data.title.toLowerCase().includes('mühendis')) gruplar.muhendisler.push(personelYuku);
                 else if (data.title.toLowerCase().includes('teknisyen') || data.title.toLowerCase().includes('tekniker') || data.title.toLowerCase().includes('kontrol memuru')) gruplar.teknisyenler.push(personelYuku);
             });
-            
+             
             const populateTable = (tbody, data) => {
                 tbody.innerHTML = '';
                 data.sort((a, b) => b.isSayisi - a.isSayisi);
@@ -1215,11 +1096,10 @@
             else isTuruArray.forEach(([name, data]) => isTuruHtml += `<tr class="hover:bg-fb-yellow hover:bg-opacity-20 cursor-pointer" onclick="window.showIsTuruDetayModal('${name.replace(/'/g, "\\'")}')"><td class="px-6 py-4 text-sm font-medium text-gray-900">${name}</td><td class="px-6 py-4 text-sm text-gray-500 font-bold text-center">${data.count}</td></tr>`);
             isTuruDagilimListesi.innerHTML = isTuruHtml;
         };
-        
-        // Filtre Event Listeners
+         
         workloadUnitFilter.addEventListener('change', personelIsYukuGuncelle);
         workloadMonthFilter.addEventListener('change', personelIsYukuGuncelle);
-        workloadYearFilter.addEventListener('change', personelIsYukuGuncelle); // Yıl değişince güncelle
+        workloadYearFilter.addEventListener('change', personelIsYukuGuncelle); 
 
         const kayitListesiniGuncelle = () => {
             kayitListesi.innerHTML = '';
@@ -1254,7 +1134,7 @@
             });
             kayitListesi.innerHTML = tableHtml;
         };
-        
+         
         window.sil = (index) => {
             if (index < 0 || index >= tumKayitlar.length) {
                 window.showInfoModal("Silinmek istenen kayıt bulunamadı. Lütfen listeyi yenileyin.", true);
@@ -1264,7 +1144,6 @@
             window.showConfirmModal(`'${kayitNo}' numaralı kaydı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`, index);
         };
 
-        // --- EVENT LISTENERS ---
         refreshBtn.addEventListener('click', excelVerisiYukle);
         logoutBtn.addEventListener('click', handleLogout);
 
@@ -1277,9 +1156,9 @@
                     closeConfirmModal();
                     return;
                 }
-                
+                 
                 closeConfirmModal();
-                
+                 
                 await deleteRecordFromGithub(kayitToDelete);
 
                 tumKayitlar.splice(silinecekKayitIndex, 1);
@@ -1299,13 +1178,12 @@
                 window.showInfoModal('Kayıt No alanı boş bırakılamaz.', true);
                 return;
             }
-            
-            // Kayıt No kontrolünü tüm kayıtlar üzerinden yap (admin için)
+             
             let allRecords = [];
-            if (originalWorkbook && originalWorkbook.Sheets['Kayitlar']) {
-                 allRecords = XLSX.utils.sheet_to_json(originalWorkbook.Sheets['Kayitlar']);
+            if (originalWorkbook && originalWorkbook.Sheets[findSheetName(originalWorkbook, 'Kayitlar')]) {
+                 allRecords = XLSX.utils.sheet_to_json(originalWorkbook.Sheets[findSheetName(originalWorkbook, 'Kayitlar')]);
             }
-            
+             
             if (allRecords.some(kayit => String(kayit['Kayıt No']).trim() === kayitNoValue)) {
                 window.showInfoModal(`'${kayitNoValue}' numaralı kayıt zaten mevcut. Lütfen farklı bir numara girin.`, true);
                 return;
@@ -1326,23 +1204,23 @@
             }
 
             setAddButtonState(true);
-            
+             
             await addNewRecordToGithub(yeniKayit);
 
             tumKayitlar.push(yeniKayit); // tumKayitlar'a da ekle (veya excelVerisiYukle() tekrar çağrılabilir)
             kayitListesiniGuncelle();
             personelIsYukuGuncelle();
-            
+             
             kayitNoInput.value = '';
             document.getElementById('parselSayisi').value = '';
             document.getElementById('isTuru').selectedIndex = 0;
             if(currentUser.role === 'admin') document.getElementById('birim').selectedIndex = 0;
             secilenPersoneller.value = '';
             window.showInfoModal("Yeni iş eklendi ve değişiklikler GitHub'a kaydedildi.");
-            
+             
             setAddButtonState(false);
         });
-        
+         
         document.getElementById('excelAktarBtn').addEventListener('click', () => {
             if (tumKayitlar.length === 0) {
                 window.showInfoModal('Dışa aktarılacak kayıt bulunmuyor.', true); return;
@@ -1357,12 +1235,12 @@
 
         document.getElementById('personelEkleBtn').addEventListener('click', () => { const secilen = personelSec.value; if (secilen && !secilenPersoneller.value.includes(secilen)) { secilenPersoneller.value += (secilenPersoneller.value ? '\n' : '') + secilen; } });
         document.getElementById('personelTemizleBtn').addEventListener('click', () => { secilenPersoneller.value = ''; });
-        
+         
         document.querySelectorAll('.accordion-toggle').forEach(button => {
             button.addEventListener('click', () => {
                 const content = button.nextElementSibling;
                 const icon = button.querySelector('i');
-                
+                 
                 icon.classList.toggle('rotate-180');
                 if (content.style.maxHeight) {
                     content.style.maxHeight = null;
@@ -1372,7 +1250,6 @@
             });
         });
 
-        // --- UYGULAMA BAŞLANGICI ---
         const initApp = () => {
             if (currentUser) {
                 loggedInUserSpan.textContent = `${currentUser.ilce} (${currentUser.role})`;
@@ -1383,8 +1260,7 @@
                 window.showInfoModal("Kritik hata: Kullanıcı bilgileri bulunamadı. Lütfen sayfayı yenileyin.", true);
             }
         };
-        
-        // --- SAYFA YÜKLENDİĞİNDE ÇALIŞACAK FONKSİYONLAR ---
+         
         initAnimatedBackground();
         checkLoginStatus();
     });
