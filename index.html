@@ -107,7 +107,7 @@
                 <div class="text-right flex items-center gap-4 justify-self-center md:justify-self-end">
                     <div>
                         <span id="loggedInUser" class="text-sm font-semibold block"></span>
-                        <span class="text-xs font-mono">v3.19.1</span>
+                        <span class="text-xs font-mono">v3.19.2</span>
                     </div>
                     <button onclick="window.showNotlarModal()" class="bg-fb-yellow text-fb-blue hover:bg-yellow-400 font-bold py-1 px-3 rounded-lg flex flex-col items-center justify-center transition-colors" title="Not Defteri">
                         <i class="fa-regular fa-note-sticky text-lg"></i>
@@ -152,22 +152,29 @@
                         </button>
                     </div>
                      
-                    <div class="flex flex-col sm:flex-row gap-4 mb-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                        <div class="flex-1">
+                    <!-- FİLTRELER BÖLÜMÜ GÜNCELLENDİ -->
+                    <div class="flex flex-col sm:flex-row gap-4 mb-4 p-4 bg-blue-50 rounded-lg border border-blue-100 flex-wrap">
+                        <div class="flex-1 min-w-[150px]">
                             <label for="workloadUnitFilter" class="block text-xs font-bold text-fb-blue uppercase">Birim Bazlı Filtre</label>
                             <select id="workloadUnitFilter" class="w-full mt-1 p-2 text-sm border border-gray-300 rounded focus:ring-fb-blue focus:border-fb-blue">
                                 <option value="">TÜM BİRİMLER</option>
                             </select>
                         </div>
-                        <div class="flex-1">
+                        <div class="flex-1 min-w-[150px]">
                             <label for="workloadYearFilter" class="block text-xs font-bold text-fb-blue uppercase">Yıl</label>
                             <select id="workloadYearFilter" class="w-full mt-1 p-2 text-sm border border-gray-300 rounded focus:ring-fb-blue focus:border-fb-blue">
                             </select>
                         </div>
-                        <div class="flex-1">
+                        <div class="flex-1 min-w-[150px]">
                             <label for="workloadMonthFilter" class="block text-xs font-bold text-fb-blue uppercase">Ay</label>
                             <select id="workloadMonthFilter" class="w-full mt-1 p-2 text-sm border border-gray-300 rounded focus:ring-fb-blue focus:border-fb-blue">
                                 <option value="">TÜM ZAMANLAR</option>
+                            </select>
+                        </div>
+                        <div class="flex-1 min-w-[150px]">
+                            <label for="workloadIsTuruFilter" class="block text-xs font-bold text-fb-blue uppercase">İş Türü</label>
+                            <select id="workloadIsTuruFilter" class="w-full mt-1 p-2 text-sm border border-gray-300 rounded focus:ring-fb-blue focus:border-fb-blue">
+                                <option value="">TÜM İŞLER</option>
                             </select>
                         </div>
                     </div>
@@ -396,6 +403,7 @@
         const workloadUnitFilter = document.getElementById('workloadUnitFilter');
         const workloadMonthFilter = document.getElementById('workloadMonthFilter');
         const workloadYearFilter = document.getElementById('workloadYearFilter');
+        const workloadIsTuruFilter = document.getElementById('workloadIsTuruFilter'); // YENİ
         const yillikArsivModal = document.getElementById('yillikArsivModal');
 
         let tumKayitlar = [];
@@ -989,7 +997,7 @@
                 const islerSheetName = findSheetName(originalWorkbook, 'İşler');
                 const islerSheet = originalWorkbook.Sheets[islerSheetName];
                 if(islerSheet){
-                    isListesi = XLSX.utils.sheet_to_json(islerSheet, { header: 1 }).flat().filter(Boolean);
+                    const isListesi = XLSX.utils.sheet_to_json(islerSheet, { header: 1 }).flat().filter(Boolean);
                     isTuru.innerHTML = `<option value="">İş Türü Seçiniz</option>`;
                     isListesi.forEach(item => isTuru.innerHTML += `<option value="${item}">${item}</option>`);
                 }
@@ -1209,6 +1217,7 @@
 
             const uniqueMonths = new Set();
             const uniqueYears = new Set();
+            const uniqueIsTurleri = new Set(); // YENİ
 
             allRecords.forEach(rec => {
                 if(rec.Tarih) {
@@ -1224,6 +1233,10 @@
                         uniqueMonths.add(monthName);
                         uniqueYears.add(dateObj.getFullYear());
                     }
+                }
+
+                if (rec.İş) {
+                    uniqueIsTurleri.add(rec.İş); // YENİ
                 }
             });
 
@@ -1249,6 +1262,12 @@
             sortedMonths.forEach(m => {
                 workloadMonthFilter.innerHTML += `<option value="${m}">${m}</option>`;
             });
+
+            // YENİ: İş Türü Dropdown Doldurma
+            workloadIsTuruFilter.innerHTML = '<option value="">TÜM İŞLER</option>';
+            [...uniqueIsTurleri].sort().forEach(isTuru => {
+                workloadIsTuruFilter.innerHTML += `<option value="${isTuru}">${isTuru}</option>`;
+            });
         };
 
         const personelIsYukuGuncelle = () => {
@@ -1259,6 +1278,7 @@
             const selectedUnit = workloadUnitFilter.value;
             const selectedMonth = workloadMonthFilter.value;
             const selectedYear = workloadYearFilter.value; 
+            const selectedIsTuru = workloadIsTuruFilter.value; // YENİ
 
             globalIsYuku.clear();
             globalIsTuru.clear();
@@ -1273,6 +1293,7 @@
 
             personelDataList.forEach(p => globalIsYuku.set(p.displayText, { 
                 count: 0, 
+                parselCount: 0, // YENİ
                 title: p.title, 
                 name: p.name,
                 isTuruData: {}
@@ -1301,12 +1322,17 @@
                 }
 
                 const isTuru = kayit.İş;
+                const parselSayisi = parseInt(kayit['Parsel Sayısı']) || 0; // YENİ
+
+                if (selectedIsTuru && isTuru !== selectedIsTuru) return; // YENİ
+
                 if(isTuru){
                      if (!globalIsTuru.has(isTuru)) {
-                        globalIsTuru.set(isTuru, { count: 0, personnel: new Map() });
+                        globalIsTuru.set(isTuru, { count: 0, parselCount: 0, personnel: new Map() }); // YENİ
                     }
                     const jobData = globalIsTuru.get(isTuru);
                     jobData.count++;
+                    jobData.parselCount += parselSayisi; // YENİ
                 }
 
                 if (kayit.Personeller && isTuru) {
@@ -1315,6 +1341,7 @@
                         if (globalIsYuku.has(atanan)) {
                             const data = globalIsYuku.get(atanan);
                             data.count++;
+                            data.parselCount += parselSayisi; // YENİ
                             data.isTuruData[isTuru] = (data.isTuruData[isTuru] || 0) + 1;
                         }
                          
@@ -1355,7 +1382,7 @@
                 if (data.count === 0 && currentUser.role !== 'admin' && !selectedUnit) {
                      if (!personelDataList.find(p => p.displayText === displayText)) return;
                 }
-                const personelYuku = { personel: data.name, isSayisi: data.count, displayText: displayText };
+                const personelYuku = { personel: data.name, isSayisi: data.count, parselSayisi: data.parselCount, displayText: displayText }; // YENİ
                 if (data.title.toLowerCase().includes('mühendis')) gruplar.muhendisler.push(personelYuku);
                 else if (data.title.toLowerCase().includes('teknisyen') || data.title.toLowerCase().includes('tekniker') || data.title.toLowerCase().includes('kontrol memuru')) gruplar.teknisyenler.push(personelYuku);
             });
@@ -1366,7 +1393,7 @@
                 if (data.length === 0) tbody.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-gray-500 text-sm">Veri yok.</td></tr>`;
                 let html = '';
                 data.forEach(item => {
-                    html += `<tr class="hover:bg-fb-yellow hover:bg-opacity-20 cursor-pointer" onclick="window.showPersonelDetayModal('${item.displayText}')"><td class="px-6 py-4 text-sm font-medium text-gray-900">${item.personel}</td><td class="px-6 py-4 text-sm text-gray-500 font-bold text-center">${item.isSayisi}</td></tr>`;
+                    html += `<tr class="hover:bg-fb-yellow hover:bg-opacity-20 cursor-pointer" onclick="window.showPersonelDetayModal('${item.displayText}')"><td class="px-6 py-4 text-sm font-medium text-gray-900">${item.personel}</td><td class="px-6 py-4 text-sm text-gray-500 font-bold text-center">${item.isSayisi} İş / ${item.parselSayisi} Parsel</td></tr>`; // YENİ
                 });
                 tbody.innerHTML = html;
             };
@@ -1378,13 +1405,14 @@
             isTuruArray.sort((a, b) => b[1].count - a[1].count);
             let isTuruHtml = '';
              if (isTuruArray.length === 0) isTuruHtml = `<tr><td colspan="2" class="p-4 text-center text-gray-500 text-sm">Kayıtlı iş bulunamadı.</td></tr>`;
-            else isTuruArray.forEach(([name, data]) => isTuruHtml += `<tr class="hover:bg-fb-yellow hover:bg-opacity-20 cursor-pointer" onclick="window.showIsTuruDetayModal('${name.replace(/'/g, "\\'")}')"><td class="px-6 py-4 text-sm font-medium text-gray-900">${name}</td><td class="px-6 py-4 text-sm text-gray-500 font-bold text-center">${data.count}</td></tr>`);
+            else isTuruArray.forEach(([name, data]) => isTuruHtml += `<tr class="hover:bg-fb-yellow hover:bg-opacity-20 cursor-pointer" onclick="window.showIsTuruDetayModal('${name.replace(/'/g, "\\'")}')"><td class="px-6 py-4 text-sm font-medium text-gray-900">${name}</td><td class="px-6 py-4 text-sm text-gray-500 font-bold text-center">${data.count} İş / ${data.parselCount} Parsel</td></tr>`); // YENİ
             isTuruDagilimListesi.innerHTML = isTuruHtml;
         };
          
         workloadUnitFilter.addEventListener('change', personelIsYukuGuncelle);
         workloadMonthFilter.addEventListener('change', personelIsYukuGuncelle);
         workloadYearFilter.addEventListener('change', personelIsYukuGuncelle); 
+        workloadIsTuruFilter.addEventListener('change', personelIsYukuGuncelle); // YENİ
 
         const kayitListesiniGuncelle = () => {
             kayitListesi.innerHTML = '';
