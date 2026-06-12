@@ -30,5 +30,13 @@
     "gorevTipi": "THA",
     "baslangic": "2026-01-01",
     "bitis": "2026-12-31"
+  },
+  {
+    "id": "durum_1781257055712",
+    "personel": "SARİYE KUŞÇU (K.Mühendisi)",
+    "tip": "izin",
+    "gorevTipi": null,
+    "baslangic": "2026-06-12",
+    "bitis": "2026-06-12"
   }
 ]
