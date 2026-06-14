@@ -917,6 +917,7 @@
                 personelDurumlari = [];
             }
             renderDurumlarList();
+            if (typeof renderPersonelDropdown === 'function') renderPersonelDropdown();
         };
 
         const saveDurumlarToGithub = async () => {
@@ -990,6 +991,7 @@
             document.getElementById('durumBitis').value = '';
             
             renderDurumlarList();
+            if (typeof renderPersonelDropdown === 'function') renderPersonelDropdown();
             await saveDurumlarToGithub();
         };
 
@@ -997,6 +999,7 @@
             if(!confirm("Bu kaydı silmek istediğinize emin misiniz?")) return;
             personelDurumlari = personelDurumlari.filter(d => d.id !== id);
             renderDurumlarList();
+            if (typeof renderPersonelDropdown === 'function') renderPersonelDropdown();
             await saveDurumlarToGithub();
         };
 
@@ -1537,6 +1540,65 @@
             });
         };
 
+        const renderPersonelDropdown = () => {
+            const isTarihi = document.getElementById('tarih').value;
+            
+            // Mevcut seçimleri kaybetmemek için hafızaya al
+            const mevcutSecilen = personelSec.value;
+            const mevcutDurumSecilen = durumPersonelSec.value;
+            
+            personelSec.innerHTML = '<option value="">Personel Seçiniz</option>';
+            durumPersonelSec.innerHTML = '<option value="">Personel Seçiniz</option>'; 
+            
+            const muhendisler = [];
+            const teknisyenler = [];
+            personelDataList.forEach(personel => {
+                const yuku = globalIsYuku.get(personel.displayText);
+                const count = yuku ? yuku.count : 0;
+                const personelWithCount = { ...personel, count: count };
+                if (personel.title.toLowerCase().includes('mühendis')) muhendisler.push(personelWithCount);
+                else if (personel.title.toLowerCase().includes('teknisyen') || personel.title.toLowerCase().includes('tekniker') || personel.title.toLowerCase().includes('kontrol memuru')) teknisyenler.push(personelWithCount);
+            });
+            muhendisler.sort((a, b) => b.count - a.count);
+            teknisyenler.sort((a, b) => b.count - a.count);
+             
+            const buildOptions = (list) => {
+                let html = '';
+                list.forEach(p => {
+                    const durum = checkPersonelDurumu(p.displayText, isTarihi);
+                    let stil = '';
+                    let ekMetin = '';
+                    if (durum) {
+                        if (durum.tip === 'izin') {
+                            stil = 'color: #ef4444; font-weight: bold;'; // Kırmızı
+                            ekMetin = ' [İZİNLİ]';
+                        } else {
+                            stil = 'color: #3b82f6; font-weight: bold;'; // Mavi
+                            ekMetin = ` [${durum.gorevTipi} Görevli]`;
+                        }
+                    }
+                    html += `<option value="${p.displayText}" style="${stil}">${p.displayText} (${p.count})${ekMetin}</option>`;
+                });
+                return html;
+            };
+
+            let muhendislerHtml = '<optgroup label="Mühendisler">';
+            muhendislerHtml += buildOptions(muhendisler);
+            muhendislerHtml += '</optgroup>';
+            personelSec.innerHTML += muhendislerHtml;
+            durumPersonelSec.innerHTML += muhendislerHtml; 
+
+            let teknisyenlerHtml = '<optgroup label="Tekniker / Teknisyenler">';
+            teknisyenlerHtml += buildOptions(teknisyenler);
+            teknisyenlerHtml += '</optgroup>';
+            personelSec.innerHTML += teknisyenlerHtml;
+            durumPersonelSec.innerHTML += teknisyenlerHtml;
+            
+            // Seçimleri geri yükle
+            if (mevcutSecilen) personelSec.value = mevcutSecilen;
+            if (mevcutDurumSecilen) durumPersonelSec.value = mevcutDurumSecilen;
+        };
+
         const personelIsYukuGuncelle = () => {
             if (workloadYearFilter.options.length === 0) {
                 populateWorkloadFilters();
@@ -1621,35 +1683,7 @@
             });
 
             // Hem iş yükü seçimi hem durum paneli seçimi aynı formatta güncellensin
-            personelSec.innerHTML = '<option value="">Personel Seçiniz</option>';
-            durumPersonelSec.innerHTML = '<option value="">Personel Seçiniz</option>'; // YENİ
-            
-            const muhendisler = [];
-            const teknisyenler = [];
-            personelDataList.forEach(personel => {
-                const yuku = globalIsYuku.get(personel.displayText);
-                const count = yuku ? yuku.count : 0;
-                const personelWithCount = { ...personel, count: count };
-                if (personel.title.toLowerCase().includes('mühendis')) muhendisler.push(personelWithCount);
-                else if (personel.title.toLowerCase().includes('teknisyen') || personel.title.toLowerCase().includes('tekniker') || personel.title.toLowerCase().includes('kontrol memuru')) teknisyenler.push(personelWithCount);
-            });
-            muhendisler.sort((a, b) => b.count - a.count);
-            teknisyenler.sort((a, b) => b.count - a.count);
-             
-            let muhendislerHtml = '<optgroup label="Mühendisler">';
-            muhendisler.forEach(personel => muhendislerHtml += `<option value="${personel.displayText}">${personel.displayText} (${personel.count})</option>`);
-            muhendislerHtml += '</optgroup>';
-            
-            personelSec.innerHTML += muhendislerHtml;
-            durumPersonelSec.innerHTML += muhendislerHtml; // YENİ
-
-            let teknisyenlerHtml = '<optgroup label="Tekniker / Teknisyenler">';
-            teknisyenler.forEach(personel => teknisyenlerHtml += `<option value="${personel.displayText}">${personel.displayText} (${personel.count})</option>`);
-            teknisyenlerHtml += '</optgroup>';
-            
-            personelSec.innerHTML += teknisyenlerHtml;
-            durumPersonelSec.innerHTML += teknisyenlerHtml; // YENİ
-
+            renderPersonelDropdown();
 
             const gruplar = { muhendisler: [], teknisyenler: [] };
             globalIsYuku.forEach((data, displayText) => {
@@ -1687,6 +1721,9 @@
         workloadMonthFilter.addEventListener('change', personelIsYukuGuncelle);
         workloadYearFilter.addEventListener('change', personelIsYukuGuncelle); 
         workloadIsTuruFilter.addEventListener('change', personelIsYukuGuncelle); 
+
+        // Tarih değiştiğinde personellerin durum renklerini güncelle
+        document.getElementById('tarih').addEventListener('change', renderPersonelDropdown);
 
         const kayitListesiniGuncelle = () => {
             kayitListesi.innerHTML = '';
