@@ -46,5 +46,13 @@
     "gorevTipi": "22-a",
     "baslangic": "2026-06-01",
     "bitis": "2026-12-31"
+  },
+  {
+    "id": "durum_1781466826946",
+    "personel": "MUSTAFA GÜRBÜZ (K.Teknisyeni)",
+    "tip": "gorev",
+    "gorevTipi": "22-a",
+    "baslangic": "2026-06-01",
+    "bitis": "2026-12-31"
   }
 ]
