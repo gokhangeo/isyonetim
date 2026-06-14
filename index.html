@@ -886,6 +886,12 @@
             } else {
                 container.classList.add('hidden');
             }
+            
+            // Dinamik alan açıldığında akordiyonun boyunu yeniden hesapla
+            const accordionContent = container.closest('.accordion-content');
+            if (accordionContent && accordionContent.style.maxHeight) {
+                accordionContent.style.maxHeight = accordionContent.scrollHeight + "px";
+            }
         };
 
         const fetchDurumlar = async () => {
