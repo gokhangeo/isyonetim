@@ -38,5 +38,13 @@
     "gorevTipi": null,
     "baslangic": "2026-06-12",
     "bitis": "2026-06-12"
+  },
+  {
+    "id": "durum_1781466725430",
+    "personel": "BARIŞ YAYLAGÜL (Tekniker)",
+    "tip": "gorev",
+    "gorevTipi": "22-a",
+    "baslangic": "2026-06-01",
+    "bitis": "2026-12-31"
   }
 ]
