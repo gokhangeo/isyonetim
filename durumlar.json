@@ -54,5 +54,13 @@
     "gorevTipi": "Diğer",
     "baslangic": "2026-06-16",
     "bitis": "2026-06-19"
+  },
+  {
+    "id": "durum_1781691140042",
+    "personel": "MÜJDE TÜRKMEN (Tekniker)",
+    "tip": "izin",
+    "gorevTipi": null,
+    "baslangic": "2026-06-18",
+    "bitis": "2026-06-19"
   }
 ]
