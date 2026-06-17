@@ -78,5 +78,13 @@
     "gorevTipi": "THA",
     "baslangic": "2026-04-01",
     "bitis": "2026-12-31"
+  },
+  {
+    "id": "durum_1781698860539",
+    "personel": "VOLKAN İZCİ (Mühendis)",
+    "tip": "gorev",
+    "gorevTipi": "22-a",
+    "baslangic": "2026-04-01",
+    "bitis": "2026-12-31"
   }
 ]
