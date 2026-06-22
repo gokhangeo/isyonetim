@@ -86,5 +86,13 @@
     "gorevTipi": "22-a",
     "baslangic": "2026-04-01",
     "bitis": "2026-12-31"
+  },
+  {
+    "id": "durum_1782112815673",
+    "personel": "MEHMET CEYLAN (Tekniker)",
+    "tip": "gorev",
+    "gorevTipi": "Diğer",
+    "baslangic": "2026-06-25",
+    "bitis": "2026-06-25"
   }
 ]
