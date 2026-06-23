@@ -94,5 +94,13 @@
     "gorevTipi": "Diğer",
     "baslangic": "2026-06-25",
     "bitis": "2026-06-25"
+  },
+  {
+    "id": "durum_1782200056986",
+    "personel": "LOKMAN ALKAN (K.Mühendisi)",
+    "tip": "gorev",
+    "gorevTipi": "Diğer",
+    "baslangic": "2026-06-23",
+    "bitis": "2026-06-29"
   }
 ]
