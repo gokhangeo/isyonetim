@@ -102,5 +102,13 @@
     "gorevTipi": "Diğer",
     "baslangic": "2026-06-23",
     "bitis": "2026-06-29"
+  },
+  {
+    "id": "durum_1782216510428",
+    "personel": "MUSTAFA BAYSAL (Tekniker)",
+    "tip": "gorev",
+    "gorevTipi": "22-a",
+    "baslangic": "2026-06-23",
+    "bitis": "2026-12-31"
   }
 ]
