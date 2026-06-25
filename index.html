@@ -44,6 +44,7 @@
         .modal { transition: opacity 0.25s ease; z-index: 9999; }
         .modal.personel-detay-modal { z-index: 10001; }
         .modal.notlar-modal { z-index: 10002; }
+        .modal.grafik-modal { z-index: 10005; }
         .spinner { border-top-color: var(--fb-yellow); }
         .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
         .status-syncing { background-color: #f59e0b; animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
@@ -107,7 +108,7 @@
                 <div class="text-right flex items-center gap-4 justify-self-center md:justify-self-end">
                     <div>
                         <span id="loggedInUser" class="text-sm font-semibold block"></span>
-                        <span class="text-xs font-mono">v3.20.0</span>
+                        <span class="text-xs font-mono">v3.21.0</span>
                     </div>
                     <button onclick="window.showNotlarModal()" class="bg-fb-yellow text-fb-blue hover:bg-yellow-400 font-bold py-1 px-3 rounded-lg flex flex-col items-center justify-center transition-colors" title="Not Defteri">
                         <i class="fa-regular fa-note-sticky text-lg"></i>
@@ -144,7 +145,6 @@
                     </div>
                 </div>
 
-                <!-- YENİ: Personel İzin ve Görev Durumları Paneli -->
                 <div class="my-8 border rounded-lg bg-white shadow-sm border-blue-200">
                     <button class="accordion-toggle w-full flex justify-between items-center p-4 text-left font-semibold text-fb-blue focus:outline-none bg-blue-50 hover:bg-blue-100 rounded-t-lg transition-colors">
                         <span><i class="fa-solid fa-user-clock mr-2 text-fb-yellow"></i>Personel İzin ve Görev Durumları</span>
@@ -152,7 +152,6 @@
                     </button>
                     <div class="accordion-content px-4 pb-4">
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4">
-                            <!-- Durum Ekleme Formu -->
                             <div class="lg:col-span-1 bg-white p-4 rounded-lg border border-gray-200 shadow-inner">
                                 <h4 class="font-bold text-fb-blue mb-3 border-b border-gray-200 pb-2 text-sm uppercase">Yeni Durum Ekle</h4>
                                 
@@ -194,7 +193,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Durum Listesi -->
                             <div class="lg:col-span-2 bg-white rounded-lg border border-gray-200 shadow-inner overflow-hidden flex flex-col">
                                 <h4 class="font-bold text-fb-blue p-4 border-b border-gray-200 text-sm uppercase bg-gray-50 m-0">Kayıtlı İzinler ve Görevler</h4>
                                 <div class="overflow-y-auto flex-grow" style="max-height: 300px;">
@@ -258,6 +256,9 @@
                                 <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
                             </button>
                             <div class="accordion-content">
+                                <div class="flex justify-end p-2 bg-gray-50 border-b border-gray-200">
+                                    <button onclick="window.showGrafikModal('muhendis')" class="text-xs font-bold text-fb-blue hover:text-fb-yellow transition-colors"><i class="fa-solid fa-chart-column mr-1"></i>Grafikte Göster</button>
+                                </div>
                                 <table class="min-w-full">
                                     <tbody id="muhendisIsYukuListesi" class="bg-white divide-y divide-gray-200"></tbody>
                                 </table>
@@ -269,6 +270,9 @@
                                 <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
                             </button>
                             <div class="accordion-content">
+                                <div class="flex justify-end p-2 bg-gray-50 border-b border-gray-200">
+                                    <button onclick="window.showGrafikModal('teknisyen')" class="text-xs font-bold text-fb-blue hover:text-fb-yellow transition-colors"><i class="fa-solid fa-chart-column mr-1"></i>Grafikte Göster</button>
+                                </div>
                                 <table class="min-w-full">
                                     <tbody id="teknisyenIsYukuListesi" class="bg-white divide-y divide-gray-200"></tbody>
                                 </table>
@@ -368,6 +372,28 @@
             </div>
         </div>
     </div>
+
+    <!-- Grafik Modalı (YENİ) -->
+    <div id="grafikModal" class="modal grafik-modal pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center opacity-0">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="window.closeGrafikModal()"></div>
+        <div class="modal-container bg-white w-11/12 md:max-w-4xl mx-auto rounded shadow-lg z-50 overflow-hidden flex flex-col" style="max-height: 85vh;">
+            <div class="modal-content py-4 px-6 flex flex-col h-full">
+                <div class="flex justify-between items-center pb-3 border-b">
+                    <p id="grafikModalBaslik" class="text-2xl font-bold text-fb-blue">Personel İş Grafiği</p>
+                    <div onclick="window.closeGrafikModal()" class="cursor-pointer z-50 text-gray-600 hover:text-red-500">
+                        <i class="fa-solid fa-times text-2xl"></i>
+                    </div>
+                </div>
+                <div class="flex-grow my-4 relative min-h-[400px]">
+                    <canvas id="personelGrafikCanvas"></canvas>
+                </div>
+                <div class="text-xs text-gray-500 text-center mb-2">Detayları görmek için grafikteki çubuklara tıklayabilirsiniz.</div>
+                <div class="flex justify-end pt-2 border-t">
+                    <button onclick="window.closeGrafikModal()" class="px-4 bg-fb-blue p-2 rounded-lg text-white hover:bg-fb-yellow hover:text-fb-blue">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
      
     <div id="yillikArsivModal" class="modal personel-detay-modal pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center opacity-0">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="window.closeYillikArsivModal()"></div>
@@ -440,7 +466,7 @@
         const GITHUB_REPO = 'isyonetim';
         const GITHUB_PATH = 'isyonetim.xlsx';
         const GITHUB_NOTES_PATH = 'notlar.json';
-        const GITHUB_DURUMLAR_PATH = 'durumlar.json'; // YENİ: İzin/Görev durumları dosyası
+        const GITHUB_DURUMLAR_PATH = 'durumlar.json';
         const TOKEN_PART_1 = 'ghp_2KS6iY7t1ka6bKyHwONJ';
         const TOKEN_PART_2 = 'kXdwOUVhrU3PqlSX';
 
@@ -458,7 +484,7 @@
         const addBtnText = document.getElementById('addBtnText');
         const addSpinner = document.getElementById('addSpinner');
         const personelSec = document.getElementById('personelSec');
-        const durumPersonelSec = document.getElementById('durumPersonelSec'); // YENİ
+        const durumPersonelSec = document.getElementById('durumPersonelSec');
         const isTuru = document.getElementById('isTuru');
         const birim = document.getElementById('birim');
         const kayitListesi = document.getElementById('kayitListesi');
@@ -491,9 +517,10 @@
         let notlar = [];
         let notlarFileSHA = null;
 
-        // YENİ: Durumlar (İzin/Görev) State
         let personelDurumlari = [];
         let durumlarFileSHA = null;
+
+        let personelChartInstance = null; // YENİ: Grafik objesi
 
         const infoModal = document.getElementById('infoModal');
         const infoModalText = document.getElementById('infoModalText');
@@ -679,6 +706,100 @@
 
              yillikArsivModal.classList.remove('opacity-0', 'pointer-events-none');
         }
+
+        // ================= YENİ: Grafik Sistemi =================
+        window.showGrafikModal = (grup) => {
+            const modal = document.getElementById('grafikModal');
+            const baslik = document.getElementById('grafikModalBaslik');
+            const ctx = document.getElementById('personelGrafikCanvas').getContext('2d');
+            
+            let dataArr = [];
+            globalIsYuku.forEach((data, displayText) => {
+                const isMuhendis = data.title.toLowerCase().includes('mühendis');
+                if ((grup === 'muhendis' && isMuhendis) || (grup === 'teknisyen' && !isMuhendis)) {
+                    dataArr.push({isim: data.name, sayi: data.count, display: displayText, isTuruData: data.isTuruData});
+                }
+            });
+
+            dataArr.sort((a, b) => b.sayi - a.sayi);
+
+            const labels = dataArr.map(d => d.isim);
+            const counts = dataArr.map(d => d.sayi);
+            const displayTexts = dataArr.map(d => d.display);
+
+            baslik.textContent = grup === 'muhendis' ? 'Mühendisler İş Dağılım Grafiği' : 'Tekniker / Teknisyenler İş Dağılım Grafiği';
+
+            if (personelChartInstance) {
+                personelChartInstance.destroy();
+            }
+
+            personelChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'İş Sayısı',
+                        data: counts,
+                        backgroundColor: '#002D72',
+                        hoverBackgroundColor: '#FBB03B',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { stepSize: 1 } 
+                        },
+                        x: {
+                            ticks: { maxRotation: 45, minRotation: 45 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Toplam İş: ${context.raw}`;
+                                },
+                                afterBody: function(context) {
+                                    const dataIndex = context[0].dataIndex;
+                                    const isler = dataArr[dataIndex].isTuruData;
+                                    const sortedIsler = Object.entries(isler).sort((a, b) => b[1] - a[1]);
+                                    
+                                    if (sortedIsler.length === 0) return [];
+                                    
+                                    let lines = ['','-- İş Dağılımı --'];
+                                    sortedIsler.forEach(([isTuru, adet]) => {
+                                        lines.push(`• ${isTuru}: ${adet}`);
+                                    });
+                                    return lines;
+                                }
+                            }
+                        }
+                    },
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const dataIndex = elements[0].index;
+                            const secilenPersonelDisplay = displayTexts[dataIndex];
+                            window.closeGrafikModal();
+                            setTimeout(() => {
+                                window.showPersonelDetayModal(secilenPersonelDisplay);
+                            }, 200);
+                        }
+                    }
+                }
+            });
+
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+        };
+
+        window.closeGrafikModal = () => {
+            document.getElementById('grafikModal').classList.add('opacity-0', 'pointer-events-none');
+        };
+        // =========================================================
 
         const utf8_to_b64 = (str) => {
             return window.btoa(unescape(encodeURIComponent(str)));
@@ -877,7 +998,6 @@
             await saveNotlarToGithub();
         };
 
-        // ================= YENİ: İZİN / GÖREV SİSTEMİ =================
         window.toggleDurumTipi = () => {
             const tip = document.getElementById('durumTipiSec').value;
             const container = document.getElementById('gorevTipiContainer');
@@ -887,10 +1007,10 @@
                 container.classList.add('hidden');
             }
             
-            // Dinamik alan açıldığında akordiyonun boyunu yeniden hesapla
+            // GÜNCELLENDİ: Dinamik alan açıldığında akordiyonun boyunu yeniden hesapla
             const accordionContent = container.closest('.accordion-content');
             if (accordionContent && accordionContent.style.maxHeight) {
-                accordionContent.style.maxHeight = accordionContent.scrollHeight + "px";
+                accordionContent.style.maxHeight = accordionContent.scrollHeight + 300 + "px"; // Esneklik payı eklendi
             }
         };
 
@@ -992,7 +1112,6 @@
 
             personelDurumlari.push(yeniDurum);
             
-            // Formu temizle
             document.getElementById('durumBaslangic').value = '';
             document.getElementById('durumBitis').value = '';
             
@@ -1013,13 +1132,11 @@
             const tbody = document.getElementById('durumlarListesi');
             tbody.innerHTML = '';
             
-            // Bitiş tarihi geçmiş olanları gizle (sadece UI için, veriden silmiyoruz)
             const today = new Date();
             today.setHours(0,0,0,0);
             
             const guncelDurumlar = personelDurumlari.filter(d => new Date(d.bitis) >= today);
             
-            // Tarihe göre sırala
             guncelDurumlar.sort((a,b) => new Date(a.baslangic) - new Date(b.baslangic));
 
             if (guncelDurumlar.length === 0) {
@@ -1076,8 +1193,6 @@
                 return isTarihi >= bas && isTarihi <= bit;
             });
         };
-
-        // ================= GİRİŞ & ÇIKIŞ =================
 
         const handleLogin = () => {
             const usernameInput = document.getElementById('username');
@@ -1549,7 +1664,6 @@
         const renderPersonelDropdown = () => {
             const isTarihi = document.getElementById('tarih').value;
             
-            // Mevcut seçimleri kaybetmemek için hafızaya al
             const mevcutSecilen = personelSec.value;
             const mevcutDurumSecilen = durumPersonelSec.value;
             
@@ -1576,10 +1690,10 @@
                     let ekMetin = '';
                     if (durum) {
                         if (durum.tip === 'izin') {
-                            stil = 'color: #ef4444; font-weight: bold;'; // Kırmızı
+                            stil = 'color: #ef4444; font-weight: bold;'; 
                             ekMetin = ' [İZİNLİ]';
                         } else {
-                            stil = 'color: #3b82f6; font-weight: bold;'; // Mavi
+                            stil = 'color: #3b82f6; font-weight: bold;'; 
                             ekMetin = ` [${durum.gorevTipi} Görevli]`;
                         }
                     }
@@ -1600,7 +1714,6 @@
             personelSec.innerHTML += teknisyenlerHtml;
             durumPersonelSec.innerHTML += teknisyenlerHtml;
             
-            // Seçimleri geri yükle
             if (mevcutSecilen) personelSec.value = mevcutSecilen;
             if (mevcutDurumSecilen) durumPersonelSec.value = mevcutDurumSecilen;
         };
@@ -1688,7 +1801,6 @@
                 }
             });
 
-            // Hem iş yükü seçimi hem durum paneli seçimi aynı formatta güncellensin
             renderPersonelDropdown();
 
             const gruplar = { muhendisler: [], teknisyenler: [] };
@@ -1728,7 +1840,6 @@
         workloadYearFilter.addEventListener('change', personelIsYukuGuncelle); 
         workloadIsTuruFilter.addEventListener('change', personelIsYukuGuncelle); 
 
-        // Tarih değiştiğinde personellerin durum renklerini güncelle
         document.getElementById('tarih').addEventListener('change', renderPersonelDropdown);
 
         const kayitListesiniGuncelle = () => {
@@ -1863,14 +1974,12 @@
             XLSX.writeFile(workbook, `Kadastro_Is_Listesi_${currentUser.ilce}_${dateStr}.xlsx`);
         });
 
-        // GÜNCELLENDİ: Personel Ekle Butonu Uyarı Mekanizması
         document.getElementById('personelEkleBtn').addEventListener('click', () => { 
             const secilen = personelSec.value; 
             const isTarihi = document.getElementById('tarih').value;
 
             if (secilen && !secilenPersoneller.value.includes(secilen)) { 
                 
-                // İzin veya görev kontrolü
                 const cakisanDurum = checkPersonelDurumu(secilen, isTarihi);
                 if (cakisanDurum) {
                     const formatBas = cakisanDurum.baslangic.split('-').reverse().join('.');
@@ -1896,7 +2005,8 @@
                 if (content.style.maxHeight) {
                     content.style.maxHeight = null;
                 } else {
-                    content.style.maxHeight = content.scrollHeight + "px";
+                    // GÜNCELLENDİ: İçeriğin tamamen sığması için daha büyük bir esneklik payı eklendi
+                    content.style.maxHeight = content.scrollHeight + 300 + "px";
                 }
             });
         });
@@ -1907,7 +2017,7 @@
                 document.getElementById('tarih').valueAsDate = new Date();
                 excelVerisiYukle();
                 fetchNotlar(); 
-                fetchDurumlar(); // YENİ
+                fetchDurumlar(); 
             } else {
                 console.error("Kullanıcı bilgileri yüklenemedi, uygulama başlatılamıyor.");
                 window.showInfoModal("Kritik hata: Kullanıcı bilgileri bulunamadı. Lütfen sayfayı yenileyin.", true);
