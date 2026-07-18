@@ -138,8 +138,13 @@
                     </div>
                     <div class="lg:col-span-1 bg-gray-50 p-4 rounded-lg border shadow-sm">
                         <h3 class="text-lg font-semibold text-fb-blue border-b-2 border-fb-yellow pb-2 mb-4">Personel Seçimi</h3>
-                        <div><label for="personelSec" class="block text-sm font-medium text-gray-700">Personel</label><select id="personelSec" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm"><option>Yükleniyor...</option></select></div>
-                        <div class="mt-2 flex gap-2"><button id="personelEkleBtn" class="flex-grow btn-secondary py-2 px-4 rounded-lg text-sm">Ekle <i class="fa-solid fa-arrow-down ml-1"></i></button></div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Personel</label>
+                            <div id="personelSec" class="mt-1 w-full rounded-md border border-gray-300 bg-white shadow-sm max-h-64 overflow-y-auto p-2 space-y-1 text-sm">
+                                <div class="text-gray-500 p-2">Yükleniyor...</div>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500">Birden fazla personeli kutucukları işaretleyerek seçebilirsiniz.</p>
+                        </div>
                         <div class="mt-4"><label for="secilenPersoneller" class="block text-sm font-medium text-gray-700">Görevli Personeller</label><textarea id="secilenPersoneller" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-fb-blue focus:ring-fb-blue sm:text-sm" readonly></textarea></div>
                         <div class="mt-2 flex gap-2"><button id="personelTemizleBtn" class="flex-grow bg-red-600 text-white py-2 px-4 rounded-lg text-sm hover:bg-red-700">Temizle <i class="fa-solid fa-trash ml-1"></i></button></div>
                     </div>
@@ -1661,20 +1666,135 @@
             });
         };
 
+        const htmlEscape = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[char]));
+
+        const getSecilenPersonelListesi = () => secilenPersoneller.value
+            .split('\n')
+            .map(p => p.trim())
+            .filter(Boolean);
+
+        const parseKayitTarihi = (tarihDegeri) => {
+            if (!tarihDegeri) return null;
+            if (typeof tarihDegeri === 'number') {
+                const excelDate = new Date(Math.round((tarihDegeri - 25569) * 86400 * 1000));
+                return isNaN(excelDate) ? null : excelDate;
+            }
+
+            const tarihText = String(tarihDegeri).trim();
+            if (!tarihText) return null;
+
+            if (/^\d{4}-\d{2}-\d{2}/.test(tarihText)) {
+                const isoDate = new Date(tarihText);
+                return isNaN(isoDate) ? null : isoDate;
+            }
+
+            const noktalıTarih = tarihText.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
+            if (noktalıTarih) {
+                const gun = Number(noktalıTarih[1]);
+                const ay = Number(noktalıTarih[2]) - 1;
+                const yil = Number(noktalıTarih[3]);
+                const localDate = new Date(yil, ay, gun);
+                return isNaN(localDate) ? null : localDate;
+            }
+
+            const parsedDate = new Date(tarihText);
+            return isNaN(parsedDate) ? null : parsedDate;
+        };
+
+        const getAktifPersonelSecimTarihi = () => {
+            const formTarihi = document.getElementById('tarih').value;
+            return parseKayitTarihi(formTarihi) || new Date();
+        };
+
+        const getPersonelSecimKayitlari = () => {
+            if (currentUser?.role === 'admin' && originalWorkbook) {
+                const kayitlarSheetName = findSheetName(originalWorkbook, 'Kayitlar');
+                const kayitlarSheet = originalWorkbook.Sheets[kayitlarSheetName];
+                if (kayitlarSheet) return XLSX.utils.sheet_to_json(kayitlarSheet);
+            }
+            return tumKayitlar;
+        };
+
+        const getPersonelAylikIsTuruSayisi = (personelDisplayText) => {
+            const seciliIsTuru = document.getElementById('isTuru').value;
+            const hedefTarih = getAktifPersonelSecimTarihi();
+            const seciliBirim = document.getElementById('birim').value;
+
+            if (!seciliIsTuru || !hedefTarih) return 0;
+
+            return getPersonelSecimKayitlari().reduce((toplam, kayit) => {
+                if (seciliBirim && currentUser?.role === 'admin' && kayit.Birim !== seciliBirim) return toplam;
+                if (kayit.İş !== seciliIsTuru) return toplam;
+
+                const kayitTarihi = parseKayitTarihi(kayit.Tarih);
+                if (!kayitTarihi) return toplam;
+                if (kayitTarihi.getFullYear() !== hedefTarih.getFullYear()) return toplam;
+                if (kayitTarihi.getMonth() !== hedefTarih.getMonth()) return toplam;
+
+                const atananlar = String(kayit.Personeller || '').split(',').map(p => p.trim()).filter(Boolean);
+                return atananlar.includes(personelDisplayText) ? toplam + 1 : toplam;
+            }, 0);
+        };
+
+        const getPersonelSecimSayacBaslik = () => {
+            const seciliIsTuru = document.getElementById('isTuru').value;
+            const hedefTarih = getAktifPersonelSecimTarihi();
+            if (!seciliIsTuru || !hedefTarih) return 'Seçili iş / ay sayısı';
+            const ayAdi = hedefTarih.toLocaleString('tr-TR', { month: 'long' });
+            return `${seciliIsTuru} - ${ayAdi} ${hedefTarih.getFullYear()} sayısı`;
+        };
+
+        const secilenPersonelTextareaGuncelle = () => {
+            const secilenler = Array.from(personelSec.querySelectorAll('input[name="personelCheckbox"]:checked'))
+                .map(cb => cb.value);
+            secilenPersoneller.value = secilenler.join('\n');
+        };
+
+        const handlePersonelCheckboxChange = (event) => {
+            const checkbox = event.target;
+            if (!checkbox.checked) {
+                secilenPersonelTextareaGuncelle();
+                return;
+            }
+
+            const secilen = checkbox.value;
+            const isTarihi = document.getElementById('tarih').value;
+            const cakisanDurum = checkPersonelDurumu(secilen, isTarihi);
+
+            if (cakisanDurum) {
+                const formatBas = cakisanDurum.baslangic.split('-').reverse().join('.');
+                const formatBit = cakisanDurum.bitis.split('-').reverse().join('.');
+                const durumMesaj = cakisanDurum.tip === 'izin' ? 'İZİNLİ' : `${cakisanDurum.gorevTipi} GÖREVİNDE`;
+                const onay = confirm(`DİKKAT!\n\n${secilen} adlı personel seçilen tarihte (${formatBas} - ${formatBit}) ${durumMesaj}.\n\nYine de işe atamak istiyor musunuz?`);
+                if (!onay) {
+                    checkbox.checked = false;
+                    secilenPersonelTextareaGuncelle();
+                    return;
+                }
+            }
+
+            secilenPersonelTextareaGuncelle();
+        };
+
         const renderPersonelDropdown = () => {
             const isTarihi = document.getElementById('tarih').value;
             
-            const mevcutSecilen = personelSec.value;
+            const mevcutSecilenler = new Set(getSecilenPersonelListesi());
             const mevcutDurumSecilen = durumPersonelSec.value;
             
-            personelSec.innerHTML = '<option value="">Personel Seçiniz</option>';
+            personelSec.innerHTML = '';
             durumPersonelSec.innerHTML = '<option value="">Personel Seçiniz</option>'; 
             
             const muhendisler = [];
             const teknisyenler = [];
             personelDataList.forEach(personel => {
-                const yuku = globalIsYuku.get(personel.displayText);
-                const count = yuku ? yuku.count : 0;
+                const count = getPersonelAylikIsTuruSayisi(personel.displayText);
                 const personelWithCount = { ...personel, count: count };
                 if (personel.title.toLowerCase().includes('mühendis')) muhendisler.push(personelWithCount);
                 else if (personel.title.toLowerCase().includes('teknisyen') || personel.title.toLowerCase().includes('tekniker') || personel.title.toLowerCase().includes('kontrol memuru')) teknisyenler.push(personelWithCount);
@@ -1697,24 +1817,63 @@
                             ekMetin = ` [${durum.gorevTipi} Görevli]`;
                         }
                     }
-                    html += `<option value="${p.displayText}" style="${stil}">${p.displayText} (${p.count})${ekMetin}</option>`;
+                    html += `<option value="${htmlEscape(p.displayText)}" style="${stil}">${htmlEscape(p.displayText)} (${p.count})${htmlEscape(ekMetin)}</option>`;
                 });
                 return html;
             };
 
+            const buildCheckboxGroup = (baslik, list) => {
+                if (list.length === 0) return '';
+
+                const sayacBaslik = getPersonelSecimSayacBaslik();
+                let html = `<div class="mb-3"><div class="font-bold text-fb-blue border-b border-gray-200 pb-1 mb-1">${baslik}<span class="block text-[11px] font-normal text-gray-500 mt-0.5">Parantez içi: ${htmlEscape(sayacBaslik)}</span></div>`;
+                list.forEach(p => {
+                    const durum = checkPersonelDurumu(p.displayText, isTarihi);
+                    let durumClass = '';
+                    let ekMetin = '';
+                    if (durum) {
+                        if (durum.tip === 'izin') {
+                            durumClass = 'text-red-600 font-bold';
+                            ekMetin = ' [İZİNLİ]';
+                        } else {
+                            durumClass = 'text-blue-600 font-bold';
+                            ekMetin = ` [${durum.gorevTipi} Görevli]`;
+                        }
+                    }
+
+                    const checked = mevcutSecilenler.has(p.displayText) ? 'checked' : '';
+                    html += `
+                        <label class="flex items-start gap-2 px-2 py-1 rounded hover:bg-blue-50 cursor-pointer">
+                            <input type="checkbox" name="personelCheckbox" value="${htmlEscape(p.displayText)}" ${checked} class="personel-checkbox mt-1 rounded border-gray-300 text-fb-blue focus:ring-fb-blue">
+                            <span class="${durumClass}">${htmlEscape(p.displayText)} (${p.count})${htmlEscape(ekMetin)}</span>
+                        </label>
+                    `;
+                });
+                html += '</div>';
+                return html;
+            };
+
+            personelSec.innerHTML = buildCheckboxGroup('Mühendisler', muhendisler) + buildCheckboxGroup('Tekniker / Teknisyenler', teknisyenler);
+
+            if (!personelSec.innerHTML.trim()) {
+                personelSec.innerHTML = '<div class="text-gray-500 p-2">Personel bulunamadı.</div>';
+            }
+
+            personelSec.querySelectorAll('input[name="personelCheckbox"]').forEach(cb => {
+                cb.addEventListener('change', handlePersonelCheckboxChange);
+            });
+
             let muhendislerHtml = '<optgroup label="Mühendisler">';
             muhendislerHtml += buildOptions(muhendisler);
             muhendislerHtml += '</optgroup>';
-            personelSec.innerHTML += muhendislerHtml;
             durumPersonelSec.innerHTML += muhendislerHtml; 
 
             let teknisyenlerHtml = '<optgroup label="Tekniker / Teknisyenler">';
             teknisyenlerHtml += buildOptions(teknisyenler);
             teknisyenlerHtml += '</optgroup>';
-            personelSec.innerHTML += teknisyenlerHtml;
             durumPersonelSec.innerHTML += teknisyenlerHtml;
             
-            if (mevcutSecilen) personelSec.value = mevcutSecilen;
+            secilenPersonelTextareaGuncelle();
             if (mevcutDurumSecilen) durumPersonelSec.value = mevcutDurumSecilen;
         };
 
@@ -1841,6 +2000,8 @@
         workloadIsTuruFilter.addEventListener('change', personelIsYukuGuncelle); 
 
         document.getElementById('tarih').addEventListener('change', renderPersonelDropdown);
+        document.getElementById('isTuru').addEventListener('change', renderPersonelDropdown);
+        document.getElementById('birim').addEventListener('change', renderPersonelDropdown);
 
         const kayitListesiniGuncelle = () => {
             kayitListesi.innerHTML = '';
@@ -1974,27 +2135,10 @@
             XLSX.writeFile(workbook, `Kadastro_Is_Listesi_${currentUser.ilce}_${dateStr}.xlsx`);
         });
 
-        document.getElementById('personelEkleBtn').addEventListener('click', () => { 
-            const secilen = personelSec.value; 
-            const isTarihi = document.getElementById('tarih').value;
-
-            if (secilen && !secilenPersoneller.value.includes(secilen)) { 
-                
-                const cakisanDurum = checkPersonelDurumu(secilen, isTarihi);
-                if (cakisanDurum) {
-                    const formatBas = cakisanDurum.baslangic.split('-').reverse().join('.');
-                    const formatBit = cakisanDurum.bitis.split('-').reverse().join('.');
-                    const durumMesaj = cakisanDurum.tip === 'izin' ? 'İZİNLİ' : `${cakisanDurum.gorevTipi} GÖREVİNDE`;
-                    
-                    const onay = confirm(`DİKKAT!\n\n${secilen} adlı personel seçilen tarihte (${formatBas} - ${formatBit}) ${durumMesaj}.\n\nYine de işe atamak istiyor musunuz?`);
-                    if (!onay) return;
-                }
-
-                secilenPersoneller.value += (secilenPersoneller.value ? '\n' : '') + secilen; 
-            } 
+        document.getElementById('personelTemizleBtn').addEventListener('click', () => {
+            personelSec.querySelectorAll('input[name="personelCheckbox"]').forEach(cb => cb.checked = false);
+            secilenPersoneller.value = '';
         });
-        
-        document.getElementById('personelTemizleBtn').addEventListener('click', () => { secilenPersoneller.value = ''; });
          
         document.querySelectorAll('.accordion-toggle').forEach(button => {
             button.addEventListener('click', () => {
