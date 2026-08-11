@@ -334,5 +334,13 @@
     "gorevTipi": null,
     "baslangic": "2026-08-10",
     "bitis": "2026-09-08"
+  },
+  {
+    "id": "durum_1786425979637",
+    "personel": "DUDU POYRAZ (Tekniker)",
+    "tip": "gorev",
+    "gorevTipi": "Diğer",
+    "baslangic": "2026-08-11",
+    "bitis": "2026-08-21"
   }
 ]
