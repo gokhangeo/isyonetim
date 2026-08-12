@@ -350,5 +350,13 @@
     "gorevTipi": "22-a",
     "baslangic": "2026-01-01",
     "bitis": "2026-12-31"
+  },
+  {
+    "id": "durum_1786529136716",
+    "personel": "HÜSEYİN POYRAZ (K.Teknisyeni)",
+    "tip": "gorev",
+    "gorevTipi": "Diğer",
+    "baslangic": "2026-01-01",
+    "bitis": "2026-12-01"
   }
 ]
