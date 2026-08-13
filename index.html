@@ -1772,7 +1772,7 @@
             const ayAdi = hedefTarih.toLocaleString('tr-TR', { month: 'long' });
             const oncekiAyTarihi = new Date(hedefTarih.getFullYear(), hedefTarih.getMonth() - 1, 1);
             const oncekiAyAdi = oncekiAyTarihi.toLocaleString('tr-TR', { month: 'long' });
-            return `${seciliIsTuru} - ${ayAdi} ${hedefTarihi.getFullYear()} / ${oncekiAyAdi} ${oncekiAyTarihi.getFullYear()} sayıları`;
+            return `${seciliIsTuru} - ${ayAdi} ${hedefTarih.getFullYear()} / ${oncekiAyAdi} ${oncekiAyTarihi.getFullYear()} sayıları`;
         };
 
         const secilenPersonelTextareaGuncelle = () => {
