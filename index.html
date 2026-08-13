@@ -1742,12 +1742,37 @@
             }, 0);
         };
 
+        const getPersonelOncekiAylikIsTuruSayisi = (personelDisplayText) => {
+            const seciliIsTuru = document.getElementById('isTuru').value;
+            const hedefTarih = getAktifPersonelSecimTarihi();
+            const seciliBirim = document.getElementById('birim').value;
+
+            if (!seciliIsTuru || !hedefTarih) return 0;
+
+            const oncekiAyTarihi = new Date(hedefTarih.getFullYear(), hedefTarih.getMonth() - 1, 1);
+
+            return getPersonelSecimKayitlari().reduce((toplam, kayit) => {
+                if (seciliBirim && currentUser?.role === 'admin' && kayit.Birim !== seciliBirim) return toplam;
+                if (kayit['İş'] !== seciliIsTuru) return toplam;
+
+                const kayitTarihi = parseKayitTarihi(kayit.Tarih);
+                if (!kayitTarihi) return toplam;
+                if (kayitTarihi.getFullYear() !== oncekiAyTarihi.getFullYear()) return toplam;
+                if (kayitTarihi.getMonth() !== oncekiAyTarihi.getMonth()) return toplam;
+
+                const atananlar = String(kayit.Personeller || '').split(',').map(p => p.trim()).filter(Boolean);
+                return atananlar.includes(personelDisplayText) ? toplam + 1 : toplam;
+            }, 0);
+        };
+
         const getPersonelSecimSayacBaslik = () => {
             const seciliIsTuru = document.getElementById('isTuru').value;
             const hedefTarih = getAktifPersonelSecimTarihi();
-            if (!seciliIsTuru || !hedefTarih) return 'Seçili iş / ay sayısı';
+            if (!seciliIsTuru || !hedefTarih) return 'Seçili iş / bu ay ve önceki ay sayıları';
             const ayAdi = hedefTarih.toLocaleString('tr-TR', { month: 'long' });
-            return `${seciliIsTuru} - ${ayAdi} ${hedefTarih.getFullYear()} sayısı`;
+            const oncekiAyTarihi = new Date(hedefTarih.getFullYear(), hedefTarih.getMonth() - 1, 1);
+            const oncekiAyAdi = oncekiAyTarihi.toLocaleString('tr-TR', { month: 'long' });
+            return `${seciliIsTuru} - ${ayAdi} ${hedefTarihi.getFullYear()} / ${oncekiAyAdi} ${oncekiAyTarihi.getFullYear()} sayıları`;
         };
 
         const secilenPersonelTextareaGuncelle = () => {
@@ -1795,7 +1820,8 @@
             const teknisyenler = [];
             personelDataList.forEach(personel => {
                 const count = getPersonelAylikIsTuruSayisi(personel.displayText);
-                const personelWithCount = { ...personel, count: count };
+                const previousCount = getPersonelOncekiAylikIsTuruSayisi(personel.displayText);
+                const personelWithCount = { ...personel, count: count, previousCount: previousCount };
                 if (personel.title.toLowerCase().includes('mühendis')) muhendisler.push(personelWithCount);
                 else if (personel.title.toLowerCase().includes('teknisyen') || personel.title.toLowerCase().includes('tekniker') || personel.title.toLowerCase().includes('kontrol memuru')) teknisyenler.push(personelWithCount);
             });
@@ -1817,7 +1843,7 @@
                             ekMetin = ` [${durum.gorevTipi} Görevli]`;
                         }
                     }
-                    html += `<option value="${htmlEscape(p.displayText)}" style="${stil}">${htmlEscape(p.displayText)} (${p.count})${htmlEscape(ekMetin)}</option>`;
+                    html += `<option value="${htmlEscape(p.displayText)}" style="${stil}">${htmlEscape(p.displayText)} (${p.count}) (${p.previousCount})${htmlEscape(ekMetin)}</option>`;
                 });
                 return html;
             };
@@ -1845,7 +1871,7 @@
                     html += `
                         <label class="flex items-start gap-2 px-2 py-1 rounded hover:bg-blue-50 cursor-pointer">
                             <input type="checkbox" name="personelCheckbox" value="${htmlEscape(p.displayText)}" ${checked} class="personel-checkbox mt-1 rounded border-gray-300 text-fb-blue focus:ring-fb-blue">
-                            <span class="${durumClass}">${htmlEscape(p.displayText)} (${p.count})${htmlEscape(ekMetin)}</span>
+                            <span class="${durumClass}">${htmlEscape(p.displayText)} (${p.count}) (${p.previousCount})${htmlEscape(ekMetin)}</span>
                         </label>
                     `;
                 });
