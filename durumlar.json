@@ -358,5 +358,13 @@
     "gorevTipi": "Diğer",
     "baslangic": "2026-01-01",
     "bitis": "2026-12-01"
+  },
+  {
+    "id": "durum_1786624810381",
+    "personel": "AYŞE ÇAKICI PEKÇETİN (Tekniker)",
+    "tip": "gorev",
+    "gorevTipi": "THA",
+    "baslangic": "2026-08-12",
+    "bitis": "2026-08-31"
   }
 ]
