@@ -242,9 +242,16 @@
                         </div>
                         <div class="flex-1 min-w-[150px]">
                             <label for="workloadMonthFilter" class="block text-xs font-bold text-fb-blue uppercase">Ay</label>
-                            <select id="workloadMonthFilter" class="w-full mt-1 p-2 text-sm border border-gray-300 rounded focus:ring-fb-blue focus:border-fb-blue">
-                                <option value="">TÜM ZAMANLAR</option>
-                            </select>
+                            <div id="workloadMonthFilter" class="relative mt-1">
+                                <button type="button" id="workloadMonthBtn" class="w-full p-2 text-sm text-left bg-white border border-gray-300 rounded focus:ring-fb-blue focus:border-fb-blue flex justify-between items-center">
+                                    <span id="workloadMonthLabel" class="truncate">TÜM ZAMANLAR</span>
+                                    <i class="fa-solid fa-chevron-down text-xs text-gray-500 ml-2"></i>
+                                </button>
+                                <div id="workloadMonthPanel" class="hidden absolute z-30 mt-1 w-full bg-white border border-gray-300 rounded shadow-lg max-h-72 overflow-y-auto p-2 text-sm">
+                                    <label class="flex items-center gap-2 p-1 font-bold border-b mb-1 cursor-pointer"><input type="checkbox" id="workloadMonthAll" checked> TÜM ZAMANLAR</label>
+                                    <div id="workloadMonthOptions"></div>
+                                </div>
+                            </div>
                         </div>
                         <div class="flex-1 min-w-[150px]">
                             <label for="workloadIsTuruFilter" class="block text-xs font-bold text-fb-blue uppercase">İş Türü</label>
@@ -504,6 +511,13 @@
         const isTuruDagilimListesi = document.getElementById('isTuruDagilimListesi');
         const workloadUnitFilter = document.getElementById('workloadUnitFilter');
         const workloadMonthFilter = document.getElementById('workloadMonthFilter');
+        const getSelectedWorkloadMonths = () => Array.from(document.querySelectorAll('.workload-month-cb:checked')).map(cb => cb.value);
+        const updateWorkloadMonthLabel = () => {
+            const secili = getSelectedWorkloadMonths();
+            const allCb = document.getElementById('workloadMonthAll');
+            if (allCb) allCb.checked = secili.length === 0;
+            document.getElementById('workloadMonthLabel').textContent = secili.length === 0 ? 'TÜM ZAMANLAR' : (secili.length <= 3 ? secili.join(', ') : `${secili.length} ay seçildi`);
+        };
         const workloadYearFilter = document.getElementById('workloadYearFilter');
         const workloadIsTuruFilter = document.getElementById('workloadIsTuruFilter'); 
         const yillikArsivModal = document.getElementById('yillikArsivModal');
@@ -1655,10 +1669,14 @@
             const monthsOrder = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
             const sortedMonths = [...uniqueMonths].sort((a, b) => monthsOrder.indexOf(a) - monthsOrder.indexOf(b));
 
-            workloadMonthFilter.innerHTML = '<option value="">TÜM ZAMANLAR</option>';
+            const oncekiSecimler = getSelectedWorkloadMonths();
+            let ayHtml = '';
             sortedMonths.forEach(m => {
-                workloadMonthFilter.innerHTML += `<option value="${m}">${m}</option>`;
+                const chk = oncekiSecimler.includes(m) ? 'checked' : '';
+                ayHtml += `<label class="flex items-center gap-2 p-1 hover:bg-blue-50 rounded cursor-pointer"><input type="checkbox" class="workload-month-cb" value="${m}" ${chk}> ${m}</label>`;
             });
+            document.getElementById('workloadMonthOptions').innerHTML = ayHtml;
+            updateWorkloadMonthLabel();
 
             workloadIsTuruFilter.innerHTML = '<option value="">TÜM İŞLER</option>';
             [...uniqueIsTurleri].sort().forEach(isTuru => {
@@ -1909,7 +1927,7 @@
             }
 
             const selectedUnit = workloadUnitFilter.value;
-            const selectedMonth = workloadMonthFilter.value;
+            const selectedMonths = getSelectedWorkloadMonths();
             const selectedYear = workloadYearFilter.value; 
             const selectedIsTuru = workloadIsTuruFilter.value; 
 
@@ -1947,7 +1965,7 @@
                         if (selectedYear && dateObj.getFullYear().toString() !== selectedYear) return;
 
                         const monthName = dateObj.toLocaleString('tr-TR', { month: 'long' });
-                        if (selectedMonth && monthName !== selectedMonth) return;
+                        if (selectedMonths.length > 0 && !selectedMonths.includes(monthName)) return;
 
                     } else {
                         return; 
@@ -2021,7 +2039,24 @@
         };
          
         workloadUnitFilter.addEventListener('change', personelIsYukuGuncelle);
-        workloadMonthFilter.addEventListener('change', personelIsYukuGuncelle);
+        workloadMonthFilter.addEventListener('change', (e) => {
+            const allCb = document.getElementById('workloadMonthAll');
+            if (e.target === allCb) {
+                if (allCb.checked) document.querySelectorAll('.workload-month-cb').forEach(cb => cb.checked = false);
+                else if (getSelectedWorkloadMonths().length === 0) allCb.checked = true;
+            } else if (e.target.classList && e.target.classList.contains('workload-month-cb')) {
+                allCb.checked = getSelectedWorkloadMonths().length === 0;
+            }
+            updateWorkloadMonthLabel();
+            personelIsYukuGuncelle();
+        });
+        document.getElementById('workloadMonthBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.getElementById('workloadMonthPanel').classList.toggle('hidden');
+        });
+        document.addEventListener('click', (e) => {
+            if (!workloadMonthFilter.contains(e.target)) document.getElementById('workloadMonthPanel').classList.add('hidden');
+        });
         workloadYearFilter.addEventListener('change', personelIsYukuGuncelle); 
         workloadIsTuruFilter.addEventListener('change', personelIsYukuGuncelle); 
 
