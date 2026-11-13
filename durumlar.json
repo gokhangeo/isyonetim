@@ -630,5 +630,13 @@
     "gorevTipi": "THA",
     "baslangic": "2026-11-13",
     "bitis": "2026-12-11"
+  },
+  {
+    "id": "durum_1794564774277",
+    "personel": "HASAN İN (Tekniker)",
+    "tip": "gorev",
+    "gorevTipi": "THA",
+    "baslangic": "2026-11-16",
+    "bitis": "2026-12-11"
   }
 ]
